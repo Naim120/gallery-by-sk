@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="app/src/main/res/mipmap-xxhdpi/ic_launcher.png" alt="Gallery by SK Logo" width="128">
+  <img src="logo.svg" alt="Gallery by SK Logo" width="128">
   <h1>Gallery by SK</h1>
   <p>A simple, clean gallery app that preserves your folder structure and original timestamps, ensuring your photo organization stays perfectly intact even when you switch phones.</p>
 
