@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">Gallery by SK</string>
+    <string name="title_folders">Local Folders</string>
+    <string name="title_vault">Cloud Vault</string>
+    <string name="title_settings">Settings</string>
+    <string name="btn_sign_in">Sign in with Google</string>
+    <string name="btn_sign_out">Sign Out</string>
+    <string name="btn_sync_now">Sync Now</string>
+    <string name="btn_restore_hierarchy">Restore Hierarchy</string>
+    <string name="btn_fetch_cloud">Fetch from Cloud</string>
+    <string name="btn_mark_missing">Mark as Missing</string>
+    <string name="status_not_signed_in">Not Signed In</string>
+    <string name="status_signed_in">Connected to Google Drive (appDataFolder)</string>
+    <string name="status_online">Online</string>
+    <string name="status_offline">Offline</string>
+    <string name="ghost_card_label">Missing Local Media</string>
+    <string name="ghost_card_desc">File exists in cloud vault manifest but is missing on device.</string>
+</resources>

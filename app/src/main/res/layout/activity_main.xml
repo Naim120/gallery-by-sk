@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_dark">
+
+    <!-- Top App Bar -->
+    <LinearLayout
+        android:id="@+id/top_bar"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="20dp"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/tv_app_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Gallery by SK"
+            android:textColor="@color/text_primary"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+
+        <ImageButton
+            android:id="@+id/btn_main_menu"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_3dot_menu"
+            android:scaleType="centerInside"
+            android:padding="8dp"
+            app:tint="@color/text_primary"
+            android:contentDescription="Menu" />
+    </LinearLayout>
+
+    <!-- Main ViewPager2 -->
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/view_pager"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toBottomOf="@id/top_bar"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+    <!-- Floating Capsule Navigation Bar (Raised margin to prevent overlapping) -->
+    <LinearLayout
+        android:id="@+id/floating_capsule_nav"
+        android:layout_width="wrap_content"
+        android:layout_height="48dp"
+        android:layout_marginBottom="36dp"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:padding="4dp"
+        android:background="@drawable/bg_floating_capsule"
+        android:elevation="12dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:id="@+id/tab_photos"
+            android:layout_width="90dp"
+            android:layout_height="40dp"
+            android:gravity="center"
+            android:text="Photos"
+            android:textColor="#000000"
+            android:textSize="14sp"
+            android:background="@drawable/bg_tab_active" />
+
+        <TextView
+            android:id="@+id/tab_albums"
+            android:layout_width="90dp"
+            android:layout_height="40dp"
+            android:gravity="center"
+            android:text="Albums"
+            android:textColor="#A0A0A0"
+            android:textSize="14sp"
+            android:background="@android:color/transparent" />
+
+        <TextView
+            android:id="@+id/tab_cloud"
+            android:layout_width="90dp"
+            android:layout_height="40dp"
+            android:gravity="center"
+            android:text="Cloud"
+            android:textColor="#A0A0A0"
+            android:textSize="14sp"
+            android:background="@android:color/transparent" />
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

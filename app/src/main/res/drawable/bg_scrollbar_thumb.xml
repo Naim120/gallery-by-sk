@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    
+    <!-- Pressed state: Wide accent-colored half-pill -->
+    <item android:state_pressed="true">
+        <layer-list>
+            <!-- Transparent bounding box -->
+            <item>
+                <shape android:shape="rectangle">
+                    <size android:width="32dp" android:height="64dp" />
+                    <solid android:color="#00000000" />
+                </shape>
+            </item>
+            <!-- 24dp wide visible pill, 8dp away from the right bezel -->
+            <item android:right="8dp">
+                <shape android:shape="rectangle">
+                    <corners android:radius="12dp" />
+                    <solid android:color="#6366F1" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+    
+    <!-- Default state: Thinner semi-transparent line -->
+    <item>
+        <layer-list>
+            <!-- Transparent bounding box to force 32dp width for massive touch target -->
+            <item>
+                <shape android:shape="rectangle">
+                    <size android:width="32dp" android:height="64dp" />
+                    <solid android:color="#00000000" />
+                </shape>
+            </item>
+            <!-- Visible 8dp thumb pushed 8dp away from the right bezel, and 16dp from the left -->
+            <item android:left="16dp" android:right="8dp">
+                <shape android:shape="rectangle">
+                    <corners android:radius="4dp" />
+                    <solid android:color="#80FFFFFF" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+</selector>

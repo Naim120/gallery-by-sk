@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <!-- 32dp wide invisible track to provide a massive touch area matching the thumb -->
+            <size android:width="32dp" />
+            <solid android:color="#00000000" />
+        </shape>
+    </item>
+</selector>

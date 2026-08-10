@@ -1,0 +1,740 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_dark"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp"
+        android:animateLayoutChanges="true">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Cloud Storage Integration"
+            android:textColor="@color/text_primary"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Google Drive Expandable Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_google_drive"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardBackgroundColor="@color/surface_card"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="6dp"
+            app:strokeColor="@color/surface_card_border"
+            app:strokeWidth="1dp"
+            android:animateLayoutChanges="true">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <!-- Header (Always Visible) -->
+                <LinearLayout
+                    android:id="@+id/header_google_drive"
+                    android:layout_width="match_parent"
+                    android:layout_height="72dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingHorizontal="20dp"
+                    android:background="?attr/selectableItemBackground"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <ImageView
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:src="@drawable/ic_google_drive" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="16dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Google Drive"
+                            android:textColor="@color/text_primary"
+                            android:textSize="18sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tv_drive_status_badge"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Not Connected"
+                            android:textColor="@color/text_muted"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:id="@+id/iv_expand_drive"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_chevron_down"
+                        app:tint="#FFFFFF" />
+                </LinearLayout>
+
+                <!-- Expandable Content Area -->
+                <LinearLayout
+                    android:id="@+id/content_google_drive"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingHorizontal="20dp"
+                    android:paddingBottom="24dp"
+                    android:visibility="gone"
+                    tools:visibility="visible">
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginBottom="16dp"
+                        android:background="@color/surface_card_border" />
+
+                    <!-- Unconnected State View -->
+                    <LinearLayout
+                        android:id="@+id/layout_drive_unconnected"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:gravity="center_horizontal"
+                        android:paddingVertical="12dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Connect your Google Account to securely back up photos to an encrypted sandboxed folder (appDataFolder)."
+                            android:textColor="@color/text_secondary"
+                            android:textSize="14sp"
+                            android:gravity="center"
+                            android:layout_marginBottom="16dp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_connect_drive"
+                            style="@style/Widget.Material3.Button.ElevatedButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="48dp"
+                            android:text="Connect Google Drive"
+                            android:textColor="@color/bg_dark"
+                            app:backgroundTint="@color/text_primary"
+                            app:cornerRadius="12dp"
+                            app:icon="@drawable/ic_google_drive"
+                            app:iconTint="@null" />
+                    </LinearLayout>
+
+                    <!-- Connected State View -->
+                    <LinearLayout
+                        android:id="@+id/layout_drive_connected"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:visibility="gone"
+                        tools:visibility="visible">
+
+                        <!-- User Profile Info -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="16dp">
+
+                            <ImageView
+                                android:id="@+id/iv_avatar"
+                                android:layout_width="48dp"
+                                android:layout_height="48dp"
+                                android:src="@android:drawable/ic_menu_myplaces"
+                                app:tint="@color/accent_primary" />
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:layout_marginStart="12dp"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:id="@+id/tv_account_name"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="User Name"
+                                    android:textColor="@color/text_primary"
+                                    android:textSize="16sp"
+                                    android:textStyle="bold" />
+
+                                <TextView
+                                    android:id="@+id/tv_account_email"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="user@gmail.com"
+                                    android:textColor="@color/text_muted"
+                                    android:textSize="13sp" />
+                            </LinearLayout>
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btn_disconnect_drive"
+                                style="@style/Widget.Material3.Button.TextButton"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Disconnect"
+                                android:textColor="#FF6B6B"
+                                android:textSize="12sp" />
+                        </LinearLayout>
+
+                        <!-- Import / Export / Delete Tabs Selector -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="44dp"
+                            android:orientation="horizontal"
+                            android:background="@color/surface_card"
+                            android:padding="4dp"
+                            android:layout_marginBottom="16dp">
+
+                            <TextView
+                                android:id="@+id/tab_export"
+                                android:layout_width="0dp"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1"
+                                android:gravity="center"
+                                android:padding="8dp"
+                                android:text="Export (Backup)"
+                                android:textColor="@color/bg_dark"
+                                android:textSize="13sp"
+                                android:textStyle="bold"
+                                android:background="@drawable/bg_tab_active" />
+
+                            <TextView
+                                android:id="@+id/tab_import"
+                                android:layout_width="0dp"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1"
+                                android:gravity="center"
+                                android:padding="8dp"
+                                android:text="Import (Restore)"
+                                android:textColor="@color/text_muted"
+                                android:textSize="13sp" />
+
+                            <TextView
+                                android:id="@+id/tab_delete"
+                                android:layout_width="0dp"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1"
+                                android:gravity="center"
+                                android:padding="8dp"
+                                android:text="Delete"
+                                android:textColor="@color/text_muted"
+                                android:textSize="13sp" />
+                        </LinearLayout>
+
+                        <!-- Export Section Container -->
+                        <LinearLayout
+                            android:id="@+id/section_export"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical">
+
+                            <!-- Persistent Quota/Error Warning Banner -->
+                            <LinearLayout
+                                android:id="@+id/banner_quota_warning"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:background="#33FF5252"
+                                android:padding="12dp"
+                                android:gravity="center_vertical"
+                                android:layout_marginBottom="16dp"
+                                android:visibility="gone">
+
+                                <ImageView
+                                    android:layout_width="24dp"
+                                    android:layout_height="24dp"
+                                    android:src="@android:drawable/ic_dialog_alert"
+                                    app:tint="#FF5252" />
+
+                                <TextView
+                                    android:id="@+id/tv_banner_text"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:layout_marginStart="12dp"
+                                    android:text="Backup Paused: Your Google Account storage is full."
+                                    android:textColor="#FF5252"
+                                    android:textSize="13sp"
+                                    android:textStyle="bold" />
+                            </LinearLayout>
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Notice: This will consume your Google Drive storage space and internet data."
+                                android:textColor="@color/text_secondary"
+                                android:textSize="13sp"
+                                android:lineSpacingExtra="3dp"
+                                android:layout_marginBottom="16dp" />
+
+                            <!-- Progress Card -->
+                            <LinearLayout
+                                android:id="@+id/layout_export_progress"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:background="@color/surface_card"
+                                android:padding="12dp"
+                                android:layout_marginBottom="16dp"
+                                android:visibility="gone"
+                                tools:visibility="visible">
+
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:orientation="horizontal">
+
+                                    <TextView
+                                        android:id="@+id/tv_upload_status"
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_weight="1"
+                                        android:text="Uploading..."
+                                        android:textColor="@color/text_primary"
+                                        android:textSize="13sp"
+                                        android:textStyle="bold" />
+
+                                    <TextView
+                                        android:id="@+id/tv_upload_percentage"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="0%"
+                                        android:textColor="@color/accent_primary"
+                                        android:textSize="13sp"
+                                        android:textStyle="bold" />
+                                </LinearLayout>
+
+                                <ProgressBar
+                                    android:id="@+id/progress_bar_upload"
+                                    style="?android:attr/progressBarStyleHorizontal"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="8dp"
+                                    android:layout_marginTop="8dp"
+                                    android:max="100"
+                                    android:progress="0"
+                                    android:progressDrawable="@drawable/bg_progress_bar" />
+                            </LinearLayout>
+
+                            <!-- Export Action Buttons -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal">
+
+                                <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/btn_export_now"
+                                    style="@style/Widget.Material3.Button.ElevatedButton"
+                                    android:layout_width="0dp"
+                                    android:layout_height="52dp"
+                                    android:layout_weight="1"
+                                    android:text="Export Now"
+                                    android:textColor="@color/bg_dark"
+                                    android:textSize="15sp"
+                                    app:backgroundTint="@color/accent_primary" />
+
+                                <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/btn_pause_backup"
+                                    style="@style/Widget.Material3.Button.OutlinedButton"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="52dp"
+                                    android:layout_marginStart="8dp"
+                                    android:text="Pause"
+                                    android:textColor="#FFB74D"
+                                    android:visibility="gone"
+                                    app:strokeColor="#FFB74D" />
+
+                                <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/btn_resume_backup"
+                                    style="@style/Widget.Material3.Button.ElevatedButton"
+                                    android:layout_width="0dp"
+                                    android:layout_height="52dp"
+                                    android:layout_weight="1"
+                                    android:text="Resume Backup"
+                                    android:textColor="@color/text_primary"
+                                    android:visibility="gone"
+                                    app:backgroundTint="#FFB74D" />
+
+                                <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/btn_cancel_backup"
+                                    style="@style/Widget.Material3.Button.TextButton"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="52dp"
+                                    android:layout_marginStart="8dp"
+                                    android:text="Cancel"
+                                    android:textColor="#FF6B6B"
+                                    android:visibility="gone" />
+                            </LinearLayout>
+                        </LinearLayout>
+
+                        <!-- Import Section Container -->
+                        <LinearLayout
+                            android:id="@+id/section_import"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:visibility="gone">
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Notice: Importing will scan your Google Drive appDataFolder for the blueprint and securely download missing files back to your device."
+                                android:textColor="@color/text_secondary"
+                                android:textSize="13sp"
+                                android:lineSpacingExtra="3dp"
+                                android:layout_marginBottom="16dp" />
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btn_scan_cloud"
+                                style="@style/Widget.Material3.Button.ElevatedButton"
+                                android:layout_width="match_parent"
+                                android:layout_height="52dp"
+                                android:text="Scan Google Drive for Backup"
+                                android:textColor="@color/bg_dark"
+                                android:layout_marginBottom="16dp"
+                                app:backgroundTint="@color/accent_primary" />
+
+                            <com.google.android.material.textfield.TextInputLayout
+                                android:id="@+id/layout_device_dropdown"
+                                style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:hint="Select Device"
+                                android:textColorHint="@color/text_muted"
+                                android:layout_marginBottom="16dp"
+                                android:visibility="gone"
+                                app:boxStrokeColor="@color/accent_primary"
+                                app:hintTextColor="@color/accent_primary">
+
+                                <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                                    android:id="@+id/spinner_devices"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:inputType="none"
+                                    android:textColor="@color/text_primary" />
+                            </com.google.android.material.textfield.TextInputLayout>
+
+                            <!-- List of device backups to select for import -->
+                            <LinearLayout
+                                android:id="@+id/layout_import_list"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:layout_marginBottom="16dp"
+                                android:visibility="gone" />
+
+
+                            <!-- Import Progress Card -->
+                            <LinearLayout
+                                android:id="@+id/layout_import_progress"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:background="@color/surface_card"
+                                android:padding="12dp"
+                                android:layout_marginBottom="16dp"
+                                android:visibility="gone">
+
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:orientation="horizontal">
+
+                                    <TextView
+                                        android:id="@+id/tv_import_status"
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_weight="1"
+                                        android:text="Restoring..."
+                                        android:textColor="@color/text_primary"
+                                        android:textSize="13sp"
+                                        android:textStyle="bold" />
+
+                                    <TextView
+                                        android:id="@+id/tv_import_percentage"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="0%"
+                                        android:textColor="@color/accent_primary"
+                                        android:textSize="13sp"
+                                        android:textStyle="bold" />
+                                </LinearLayout>
+
+                                <ProgressBar
+                                    android:id="@+id/progress_bar_import"
+                                    style="?android:attr/progressBarStyleHorizontal"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="8dp"
+                                    android:layout_marginTop="8dp"
+                                    android:max="100"
+                                    android:progress="0"
+                                    android:progressDrawable="@drawable/bg_progress_bar" />
+                            </LinearLayout>
+
+                            <!-- Import Action Buttons -->
+                            <LinearLayout
+                                android:id="@+id/layout_import_actions"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:visibility="gone">
+
+                                <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/btn_import_now"
+                                    style="@style/Widget.Material3.Button.ElevatedButton"
+                                    android:layout_width="0dp"
+                                    android:layout_height="52dp"
+                                    android:layout_weight="1"
+                                    android:text="Restore Now"
+                                    android:textColor="@color/bg_dark"
+                                    android:textSize="15sp"
+                                    app:backgroundTint="@color/accent_primary" />
+
+                                <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/btn_pause_import"
+                                    style="@style/Widget.Material3.Button.OutlinedButton"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="52dp"
+                                    android:layout_marginStart="8dp"
+                                    android:text="Pause"
+                                    android:textColor="#FFB74D"
+                                    android:visibility="gone"
+                                    app:strokeColor="#FFB74D" />
+
+                                <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/btn_resume_import"
+                                    style="@style/Widget.Material3.Button.ElevatedButton"
+                                    android:layout_width="0dp"
+                                    android:layout_height="52dp"
+                                    android:layout_weight="1"
+                                    android:text="Resume Restore"
+                                    android:textColor="@color/text_primary"
+                                    android:visibility="gone"
+                                    app:backgroundTint="#FFB74D" />
+
+                                <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/btn_cancel_import"
+                                    style="@style/Widget.Material3.Button.TextButton"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="52dp"
+                                    android:layout_marginStart="8dp"
+                                    android:text="Cancel"
+                                    android:textColor="#FF6B6B"
+                                    android:visibility="gone" />
+                            </LinearLayout>
+                        </LinearLayout>
+
+                        <!-- Delete Section Container -->
+                        <LinearLayout
+                            android:id="@+id/section_delete"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:visibility="gone">
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Notice: Deleting device backups from Google Drive will permanently erase the selected device sub-directories and all their contents."
+                                android:textColor="@color/text_secondary"
+                                android:textSize="13sp"
+                                android:lineSpacingExtra="3dp"
+                                android:layout_marginBottom="16dp" />
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btn_scan_delete"
+                                style="@style/Widget.Material3.Button.ElevatedButton"
+                                android:layout_width="match_parent"
+                                android:layout_height="52dp"
+                                android:text="Scan Google Drive for Backups"
+                                android:textColor="#FFFFFF"
+                                android:layout_marginBottom="16dp"
+                                app:backgroundTint="#FF6B6B" />
+
+                            <!-- List of device backups to select for deletion -->
+                            <LinearLayout
+                                android:id="@+id/layout_delete_list"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:layout_marginBottom="16dp" />
+
+                            <!-- PIN input field -->
+                            <com.google.android.material.textfield.TextInputLayout
+                                android:id="@+id/layout_delete_pin"
+                                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:hint="Enter Private Safe PIN"
+                                android:textColorHint="@color/text_muted"
+                                android:layout_marginBottom="16dp"
+                                android:visibility="gone"
+                                app:boxStrokeColor="#FF6B6B"
+                                app:hintTextColor="#FF6B6B"
+                                app:passwordToggleEnabled="true">
+                                
+                                <com.google.android.material.textfield.TextInputEditText
+                                    android:id="@+id/et_delete_pin"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:inputType="numberPassword"
+                                    android:textColor="@color/text_primary" />
+                            </com.google.android.material.textfield.TextInputLayout>
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btn_delete_confirm"
+                                style="@style/Widget.Material3.Button.ElevatedButton"
+                                android:layout_width="match_parent"
+                                android:layout_height="52dp"
+                                android:text="Delete Selected Backups"
+                                android:textColor="@color/text_primary"
+                                android:textSize="15sp"
+                                android:visibility="gone"
+                                app:backgroundTint="#FF6B6B" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Any S3 Bucket Expandable Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_s3_bucket"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            app:cardBackgroundColor="@color/surface_card"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="6dp"
+            app:strokeColor="@color/surface_card_border"
+            app:strokeWidth="1dp"
+            android:animateLayoutChanges="true">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <!-- Header (Always Visible) -->
+                <LinearLayout
+                    android:id="@+id/header_s3_bucket"
+                    android:layout_width="match_parent"
+                    android:layout_height="72dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingHorizontal="20dp"
+                    android:background="?attr/selectableItemBackground"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <ImageView
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:src="@android:drawable/stat_sys_download"
+                        app:tint="#FF9900" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="16dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Any S3 Bucket"
+                            android:textColor="@color/text_primary"
+                            android:textSize="18sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="AWS S3, MinIO, Wasabi, Cloudflare R2"
+                            android:textColor="@color/text_muted"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:id="@+id/iv_expand_s3"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_chevron_down"
+                        app:tint="#FFFFFF" />
+                </LinearLayout>
+
+                <!-- Expandable Content Area -->
+                <LinearLayout
+                    android:id="@+id/content_s3_bucket"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingHorizontal="20dp"
+                    android:paddingBottom="24dp"
+                    android:visibility="gone">
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginBottom="16dp"
+                        android:background="@color/surface_card_border" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Connect any S3-compatible cloud storage endpoint with custom IAM access keys."
+                        android:textColor="@color/text_secondary"
+                        android:textSize="14sp"
+                        android:layout_marginBottom="16dp" />
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="S3 Endpoint URL"
+                        android:textColorHint="@color/text_muted"
+                        android:layout_marginBottom="12dp">
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/text_primary"
+                            android:text="s3.amazonaws.com"
+                            android:enabled="false" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.button.MaterialButton
+                        style="@style/Widget.Material3.Button.ElevatedButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="50dp"
+                        android:text="Connect - Coming Soon"
+                        android:textColor="@color/bg_dark"
+                        android:textStyle="bold"
+                        android:enabled="false"
+                        app:backgroundTint="#FF9900"
+                        app:cornerRadius="12dp" />
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

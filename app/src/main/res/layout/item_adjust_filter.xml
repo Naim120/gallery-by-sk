@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:paddingHorizontal="6dp"
+    android:paddingVertical="4dp">
+
+    <RelativeLayout
+        android:layout_width="68dp"
+        android:layout_height="68dp">
+
+        <!-- Selected Border Frame -->
+        <View
+            android:id="@+id/view_filter_border"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_filter_selected_border"
+            android:visibility="gone" />
+
+        <!-- Thumbnail Container -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_centerInParent="true"
+            app:cardCornerRadius="6dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="@android:color/transparent">
+            
+            <ImageView
+                android:id="@+id/img_filter_thumbnail"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:background="#333333" />
+        </androidx.cardview.widget.CardView>
+
+    </RelativeLayout>
+
+    <TextView
+        android:id="@+id/tv_filter_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="Original"
+        android:textColor="#FFFFFF"
+        android:textSize="10sp"
+        android:singleLine="true"
+        android:ellipsize="end" />
+
+</LinearLayout>
