@@ -1,6 +1,14 @@
-# Gallery by SK
+<div align="center">
+  <img src="app/src/main/res/mipmap-xxhdpi/ic_launcher.png" alt="Gallery by SK Logo" width="128">
+  <h1>Gallery by SK</h1>
+  <p>A simple, clean gallery app that preserves your folder structure and original timestamps, ensuring your photo organization stays perfectly intact even when you switch phones.</p>
 
-A simple, clean gallery app that preserves your folder structure and original timestamps, ensuring your photo organization stays perfectly intact even when you switch phones.
+  <a href="https://github.com/Naim120/gallery-by-sk/releases/">
+    <img src="https://img.shields.io/github/v/release/Naim120/gallery-by-sk?label=Download%20APK&style=for-the-badge&color=success" alt="Download APK">
+  </a>
+</div>
+
+<br/>
 
 ## The Problem
 
