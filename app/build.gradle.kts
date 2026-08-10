@@ -1,3 +1,6 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -17,15 +20,29 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         val secretsFile = rootProject.file("secrets.properties")
-        val secrets = java.util.Properties()
+        val secrets = Properties()
         if (secretsFile.exists()) {
-            secrets.load(java.io.FileInputStream(secretsFile))
+            secrets.load(FileInputStream(secretsFile))
         }
         val clientId = secrets.getProperty("OAUTH_CLIENT_ID", "YOUR_CLIENT_ID_HERE")
         
         manifestPlaceholders["oauthClientId"] = clientId
         buildConfigField("String", "OAUTH_CLIENT_ID", "\"$clientId\"")
         buildConfigField("String", "DRIVE_APPDATA_SCOPE", "\"https://www.googleapis.com/auth/drive.appdata\"")
+    }
+
+    signingConfigs {
+        create("release") {
+            val secretsFile = rootProject.file("secrets.properties")
+            val secrets = Properties()
+            if (secretsFile.exists()) {
+                secrets.load(FileInputStream(secretsFile))
+                storeFile = file(secrets.getProperty("KEYSTORE_FILE", ""))
+                storePassword = secrets.getProperty("KEYSTORE_PASSWORD", "")
+                keyAlias = secrets.getProperty("KEY_ALIAS", "")
+                keyPassword = secrets.getProperty("KEY_PASSWORD", "")
+            }
+        }
     }
 
     buildTypes {
@@ -35,6 +52,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {
