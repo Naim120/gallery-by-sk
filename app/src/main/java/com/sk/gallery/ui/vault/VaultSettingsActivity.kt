@@ -20,6 +20,7 @@ class VaultSettingsActivity : AppCompatActivity() {
     private lateinit var binding: ActivityVaultSettingsBinding
 
     private var pendingAction = "" // "export" or "import"
+    private var isLaunchingExternal = false
 
     private val signInLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == android.app.Activity.RESULT_OK) {
@@ -52,6 +53,7 @@ class VaultSettingsActivity : AppCompatActivity() {
         }
 
         binding.btnChangePin.setOnClickListener {
+            isLaunchingExternal = true
             val intent = Intent(this, VaultSecurityActivity::class.java).apply {
                 putExtra(VaultSecurityActivity.EXTRA_CHANGE_PIN, true)
             }
@@ -144,12 +146,20 @@ class VaultSettingsActivity : AppCompatActivity() {
                 .requestScopes(Scope(DriveScopes.DRIVE_APPDATA))
                 .build()
             val client = GoogleSignIn.getClient(this, signInOptions)
+            isLaunchingExternal = true
             signInLauncher.launch(client.signInIntent)
         }
     }
 
     private fun startExportFlow() {
         val prefs = com.sk.gallery.data.local.AppPreferences(this)
+        
+        val vaultEntries = com.sk.gallery.data.PrivateVaultManager.getVaultEntries(this)
+        if (vaultEntries.isEmpty()) {
+            Toast.makeText(this, "Your Private Safe is empty! Nothing to back up.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         var passphrase = prefs.getCloudPassphrase()
         
         if (passphrase == null) {
@@ -773,5 +783,17 @@ class VaultSettingsActivity : AppCompatActivity() {
         const val EXTRA_CHANGE_PIN = "extra_change_pin"
         const val EXPORT_WORK_NAME = "private_safe_export"
         const val IMPORT_WORK_NAME = "private_safe_import"
+    }
+    
+    override fun onResume() {
+        super.onResume()
+        isLaunchingExternal = false
+    }
+
+    override fun onPause() {
+        super.onPause()
+        if (!isChangingConfigurations && !isLaunchingExternal && !isFinishing) {
+            finishAffinity()
+        }
     }
 }

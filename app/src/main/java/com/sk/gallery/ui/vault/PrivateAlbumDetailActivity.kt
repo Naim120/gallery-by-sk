@@ -170,6 +170,9 @@ class PrivateAlbumDetailActivity : AppCompatActivity() {
         } else {
             allEntries.filter { it.mimeType.startsWith("video") }
         }
+        if (::adapter.isInitialized && adapter.isSelectionMode) {
+            adapter.clearSelectionMode()
+        }
         adapter.updateEntries(albumEntries)
         
         if (albumEntries.isEmpty()) {

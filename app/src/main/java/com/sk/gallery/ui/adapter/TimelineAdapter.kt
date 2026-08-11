@@ -47,6 +47,11 @@ class TimelineAdapter(
     }
 
     fun updateEntries(entries: List<FileEntry>) {
+        if (selectedEntries.isNotEmpty()) {
+            val hashIds = selectedEntries.map { it.hashId }.toSet()
+            selectedEntries.clear()
+            selectedEntries.addAll(entries.filter { hashIds.contains(it.hashId) })
+        }
         allMediaEntries = entries
         val grouped = mutableListOf<TimelineItem>()
         val dateFormat = SimpleDateFormat("MMMM d, yyyy", Locale.getDefault())

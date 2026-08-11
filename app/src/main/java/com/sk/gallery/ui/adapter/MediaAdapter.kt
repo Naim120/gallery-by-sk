@@ -76,6 +76,11 @@ class MediaAdapter(
     }
 
     fun updateEntries(newEntries: List<FileEntry>) {
+        if (selectedEntries.isNotEmpty()) {
+            val hashIds = selectedEntries.map { it.hashId }.toSet()
+            selectedEntries.clear()
+            selectedEntries.addAll(newEntries.filter { hashIds.contains(it.hashId) })
+        }
         entries = newEntries
         notifyDataSetChanged()
     }

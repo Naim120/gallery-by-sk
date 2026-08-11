@@ -286,6 +286,9 @@ class VaultTimelineFragment : Fragment(), VaultRefreshable {
 
     override fun refreshVaultData() {
         if (_binding != null) {
+            if (::adapter.isInitialized && adapter.isSelectionMode) {
+                adapter.clearSelectionMode()
+            }
             adapter.updateEntries(PrivateSafeActivity.vaultEntries)
         }
     }
