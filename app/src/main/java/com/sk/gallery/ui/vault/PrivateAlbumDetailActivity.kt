@@ -119,30 +119,20 @@ class PrivateAlbumDetailActivity : AppCompatActivity() {
                 .setTitle("Set as Public")
                 .setMessage("Where do you want to restore these files?")
                 .setPositiveButton("Original Location") { _, _ ->
-                    var restoredCount = 0
-                    selected.forEach { entry ->
-                        PrivateVaultManager.restoreFromVault(this, entry.hashId) {
-                            restoredCount++
-                            if (restoredCount == selected.size) {
-                                Toast.makeText(this, "Restored $restoredCount items", Toast.LENGTH_SHORT).show()
-                                adapter.clearSelectionMode()
-                                onResume()
-                            }
-                        }
+                    val hashIds = selected.map { it.hashId }
+                    PrivateVaultManager.restoreFromVault(this, hashIds) {
+                        Toast.makeText(this, "Restored ${hashIds.size} items", Toast.LENGTH_SHORT).show()
+                        adapter.clearSelectionMode()
+                        onResume()
                     }
                 }
                 .setNeutralButton("Custom Location") { _, _ ->
                     com.sk.gallery.util.MoveHelper.showLocationPicker(this) { targetDir ->
-                        var restoredCount = 0
-                        selected.forEach { entry ->
-                            PrivateVaultManager.restoreFromVault(this, entry.hashId, targetDir) {
-                                restoredCount++
-                                if (restoredCount == selected.size) {
-                                    Toast.makeText(this, "Restored $restoredCount items", Toast.LENGTH_SHORT).show()
-                                    adapter.clearSelectionMode()
-                                    onResume()
-                                }
-                            }
+                        val hashIds = selected.map { it.hashId }
+                        PrivateVaultManager.restoreFromVault(this, hashIds, targetDir) {
+                            Toast.makeText(this, "Restored ${hashIds.size} items", Toast.LENGTH_SHORT).show()
+                            adapter.clearSelectionMode()
+                            onResume()
                         }
                     }
                 }

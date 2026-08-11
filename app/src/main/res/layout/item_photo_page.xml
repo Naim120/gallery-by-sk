@@ -26,11 +26,12 @@
             android:visibility="gone"
             tools:visibility="visible">
 
-            <VideoView
+            <androidx.media3.ui.PlayerView
                 android:id="@+id/video_view"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_gravity="center" />
+                android:layout_gravity="center"
+                app:use_controller="false" />
 
             <ImageView
                 android:id="@+id/iv_center_play"

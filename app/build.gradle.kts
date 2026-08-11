@@ -15,8 +15,8 @@ android {
         applicationId = "com.sk.gallery"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         val secretsFile = rootProject.file("secrets.properties")
@@ -136,8 +136,10 @@ dependencies {
     // ColorPicker
     implementation("com.github.skydoves:colorpickerview:2.3.0")
 
-    // Media3 (Video Editing)
+    // Media3 (Video Editing & Playback)
     val media3Version = "1.2.0"
+    implementation("androidx.media3:media3-exoplayer:$media3Version")
+    implementation("androidx.media3:media3-ui:$media3Version")
     implementation("androidx.media3:media3-transformer:$media3Version")
     implementation("androidx.media3:media3-effect:$media3Version")
     implementation("androidx.media3:media3-common:$media3Version")

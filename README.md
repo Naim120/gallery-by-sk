@@ -27,6 +27,8 @@ When switching to a new phone, most cloud backups (like Google Photos) lump all 
 - **Private Safe**: A secure, isolated vault for your sensitive media.
   - Requires PIN or Biometric authentication.
   - Prevents screenshots and immediately locks when you leave the app.
+  - Features lightning-fast V2 Streaming Encryption, instantly encrypting massive files without eating up device memory.
+  - Uses ExoPlayer to securely stream encrypted vault videos in real-time with zero buffering or wait times.
   - Backs up securely to Google Drive using encryption. A 12-word recovery phrase is required to restore them on a new device.
 - **Smart Storage**: Checks your Google Drive space before uploading so backups don't fail halfway.
 - **Resume Support**: If your network drops, the app pauses and lets you resume exactly where you left off.

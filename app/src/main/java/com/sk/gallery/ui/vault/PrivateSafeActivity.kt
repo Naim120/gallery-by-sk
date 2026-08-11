@@ -243,35 +243,25 @@ class VaultTimelineFragment : Fragment(), VaultRefreshable {
                 .setTitle("Set as Public")
                 .setMessage("Where do you want to restore these files?")
                 .setPositiveButton("Original Location") { _, _ ->
-                    var restoredCount = 0
-                    selected.forEach { entry ->
-                        com.sk.gallery.data.PrivateVaultManager.restoreFromVault(requireContext(), entry.hashId) {
-                            restoredCount++
-                            if (restoredCount == selected.size) {
-                                android.widget.Toast.makeText(requireContext(), "Restored $restoredCount items", android.widget.Toast.LENGTH_SHORT).show()
-                                adapter.clearSelectionMode()
-                                (activity as? PrivateSafeActivity)?.let {
-                                    PrivateSafeActivity.vaultEntries = com.sk.gallery.data.PrivateVaultManager.getVaultEntries(it)
-                                    it.supportFragmentManager.fragments.forEach { f -> (f as? VaultRefreshable)?.refreshVaultData() }
-                                }
-                            }
+                    val hashIds = selected.map { it.hashId }
+                    com.sk.gallery.data.PrivateVaultManager.restoreFromVault(requireContext(), hashIds) {
+                        android.widget.Toast.makeText(requireContext(), "Restored ${hashIds.size} items", android.widget.Toast.LENGTH_SHORT).show()
+                        adapter.clearSelectionMode()
+                        (activity as? PrivateSafeActivity)?.let {
+                            PrivateSafeActivity.vaultEntries = com.sk.gallery.data.PrivateVaultManager.getVaultEntries(it)
+                            it.supportFragmentManager.fragments.forEach { f -> (f as? VaultRefreshable)?.refreshVaultData() }
                         }
                     }
                 }
                 .setNeutralButton("Custom Location") { _, _ ->
                     com.sk.gallery.util.MoveHelper.showLocationPicker(requireContext()) { targetDir ->
-                        var restoredCount = 0
-                        selected.forEach { entry ->
-                            com.sk.gallery.data.PrivateVaultManager.restoreFromVault(requireContext(), entry.hashId, targetDir) {
-                                restoredCount++
-                                if (restoredCount == selected.size) {
-                                    android.widget.Toast.makeText(requireContext(), "Restored $restoredCount items", android.widget.Toast.LENGTH_SHORT).show()
-                                    adapter.clearSelectionMode()
-                                    (activity as? PrivateSafeActivity)?.let {
-                                        PrivateSafeActivity.vaultEntries = com.sk.gallery.data.PrivateVaultManager.getVaultEntries(it)
-                                        it.supportFragmentManager.fragments.forEach { f -> (f as? VaultRefreshable)?.refreshVaultData() }
-                                    }
-                                }
+                        val hashIds = selected.map { it.hashId }
+                        com.sk.gallery.data.PrivateVaultManager.restoreFromVault(requireContext(), hashIds, targetDir) {
+                            android.widget.Toast.makeText(requireContext(), "Restored ${hashIds.size} items", android.widget.Toast.LENGTH_SHORT).show()
+                            adapter.clearSelectionMode()
+                            (activity as? PrivateSafeActivity)?.let {
+                                PrivateSafeActivity.vaultEntries = com.sk.gallery.data.PrivateVaultManager.getVaultEntries(it)
+                                it.supportFragmentManager.fragments.forEach { f -> (f as? VaultRefreshable)?.refreshVaultData() }
                             }
                         }
                     }

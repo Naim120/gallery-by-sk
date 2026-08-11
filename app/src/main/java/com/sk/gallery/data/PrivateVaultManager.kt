@@ -131,11 +131,11 @@ object PrivateVaultManager {
         
         try {
             progressBar = android.widget.ProgressBar(context, null, android.R.attr.progressBarStyleHorizontal)
-            progressBar.max = total
+            progressBar.max = total * 100
             progressBar.progress = 0
             
             tvProgress = android.widget.TextView(context).apply {
-                text = "Moving 0 of $total..."
+                text = "Moving 1 of $total (0%)..."
                 setPadding(16, 16, 16, 16)
             }
             
@@ -180,7 +180,12 @@ object PrivateVaultManager {
                 
                 try {
                     val originalLastModified = srcFile.lastModified()
-                    com.sk.gallery.data.crypto.CryptoManager.encryptFileLocal(srcFile, destFile)
+                    com.sk.gallery.data.crypto.CryptoManager.encryptFileLocal(srcFile, destFile, onProgress = { percent ->
+                        kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.Main) {
+                            progressBar?.progress = (movedCount * 100) + percent
+                            tvProgress?.text = "Moving ${movedCount + 1} of $total ($percent%)..."
+                        }
+                    })
                     destFile.setLastModified(originalLastModified)
                     generateAndEncryptThumbnail(context, srcFile, File(vaultDir, "$newName.thumb"))
 
@@ -215,8 +220,12 @@ object PrivateVaultManager {
                     movedCount++
                     
                     kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
-                        progressBar?.progress = movedCount
-                        tvProgress?.text = "Moving $movedCount of $total..."
+                        progressBar?.progress = movedCount * 100
+                        if (movedCount < total) {
+                            tvProgress?.text = "Moving ${movedCount + 1} of $total (0%)..."
+                        } else {
+                            tvProgress?.text = "Moving completed"
+                        }
                     }
                 } else {
                     if (destFile.exists()) destFile.delete()
@@ -240,73 +249,125 @@ object PrivateVaultManager {
         }
     }
 
-    fun restoreFromVault(context: Context, internalFileName: String, targetDir: File? = null, onSuccess: () -> Unit) {
+    fun restoreFromVault(context: Context, internalFileNames: List<String>, targetDir: File? = null, onSuccess: () -> Unit) {
+        val total = internalFileNames.size
+        var progressDialog: android.app.AlertDialog? = null
+        var progressBar: android.widget.ProgressBar? = null
+        var tvProgress: android.widget.TextView? = null
+        
+        try {
+            progressBar = android.widget.ProgressBar(context, null, android.R.attr.progressBarStyleHorizontal)
+            progressBar.max = total * 100
+            progressBar.progress = 0
+            
+            tvProgress = android.widget.TextView(context).apply {
+                text = "Restoring 1 of $total (0%)..."
+                setPadding(16, 16, 16, 16)
+            }
+            
+            val layout = android.widget.LinearLayout(context).apply {
+                orientation = android.widget.LinearLayout.VERTICAL
+                setPadding(48, 24, 48, 24)
+                addView(tvProgress)
+                addView(progressBar)
+            }
+            
+            progressDialog = android.app.AlertDialog.Builder(context)
+                .setTitle("Private Safe")
+                .setView(layout)
+                .setCancelable(false)
+                .create()
+                
+            progressDialog.show()
+        } catch (e: Exception) {}
+
         kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.IO) {
             loadMap(context)
             val vaultDir = getVaultDir(context)
-            val srcFile = File(vaultDir, internalFileName)
-            if (!srcFile.exists()) return@launch
+            var restoredCount = 0
+            val pathsToScan = mutableListOf<String>()
 
-            val originalPath = vaultMutex.withLock { vaultMap[internalFileName] } ?: return@launch
-            
-            val destFile = if (targetDir != null) {
-                val originalName = File(originalPath).name
-                File(targetDir, originalName)
-            } else {
-                File(originalPath)
-            }
+            for (internalFileName in internalFileNames) {
+                val srcFile = File(vaultDir, internalFileName)
+                if (!srcFile.exists()) continue
 
-            destFile.parentFile?.let { if (!it.exists()) it.mkdirs() }
-
-            try {
-                val originalLastModified = srcFile.lastModified()
-                val tempFile = File(destFile.absolutePath + ".tmp")
-                com.sk.gallery.data.crypto.CryptoManager.decryptFileLocal(srcFile, tempFile)
+                val originalPath = vaultMutex.withLock { vaultMap[internalFileName] } ?: continue
                 
-                if (tempFile.exists() && tempFile.length() > 0) {
-                    if (destFile.exists()) destFile.delete()
-                    tempFile.renameTo(destFile)
-                    destFile.setLastModified(originalLastModified)
+                val destFile = if (targetDir != null) {
+                    val originalName = File(originalPath).name
+                    File(targetDir, originalName)
+                } else {
+                    File(originalPath)
                 }
 
-                if (srcFile.delete()) {
-                    val thumbFile = File(vaultDir, "$internalFileName.thumb")
-                    if (thumbFile.exists()) thumbFile.delete()
+                destFile.parentFile?.let { if (!it.exists()) it.mkdirs() }
+
+                try {
+                    val originalLastModified = srcFile.lastModified()
+                    val tempFile = File(destFile.absolutePath + ".tmp")
+                    com.sk.gallery.data.crypto.CryptoManager.decryptFileLocal(srcFile, tempFile, onProgress = { percent ->
+                        kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.Main) {
+                            progressBar?.progress = (restoredCount * 100) + percent
+                            tvProgress?.text = "Restoring ${restoredCount + 1} of $total ($percent%)..."
+                        }
+                    })
                     
-                    val cloudRemoved = vaultMutex.withLock {
-                        vaultMap.remove(internalFileName)
-                        vaultMetadata.remove(internalFileName)
-                        saveMap(context)
-                        cloudStatusSet.remove("${internalFileName}.enc")
+                    if (tempFile.exists() && tempFile.length() > 0) {
+                        if (destFile.exists()) destFile.delete()
+                        tempFile.renameTo(destFile)
+                        destFile.setLastModified(originalLastModified)
                     }
-                    
-                    if (cloudRemoved) {
-                        setCloudStatus(context, cloudStatusSet)
+
+                    if (srcFile.delete()) {
+                        val thumbFile = File(vaultDir, "$internalFileName.thumb")
+                        if (thumbFile.exists()) thumbFile.delete()
                         
-                        // Scenario 3 & 4: Ensure the file gets a cloud icon in the regular gallery
-                        // We must compute the exact hashId that MediaStoreScanner will generate for this file.
-                        // MediaStoreScanner hashes the relative path (e.g. "DCIM/Camera/file.jpg").
-                        // originalPath is absolute (e.g. "/storage/emulated/0/DCIM/Camera/file.jpg").
-                        val externalStoragePath = android.os.Environment.getExternalStorageDirectory().absolutePath + "/"
-                        if (destFile.absolutePath.startsWith(externalStoragePath)) {
-                            val relativePath = destFile.absolutePath.substring(externalStoragePath.length)
-                            val hashId = com.sk.gallery.util.FileUtils.hashStringSha256(relativePath)
-                            
-                            // Delay briefly so MediaScanner finishes creating the manifest entry first
-                            kotlinx.coroutines.GlobalScope.launch {
-                                kotlinx.coroutines.delay(1000)
-                                com.sk.gallery.data.MediaRepository.getInstance(context).setCloudStatusForFile(hashId, "restored_from_vault")
+                        val cloudRemoved = vaultMutex.withLock {
+                            vaultMap.remove(internalFileName)
+                            vaultMetadata.remove(internalFileName)
+                            cloudStatusSet.remove("${internalFileName}.enc")
+                        }
+                        
+                        if (cloudRemoved) {
+                            val externalStoragePath = android.os.Environment.getExternalStorageDirectory().absolutePath + "/"
+                            if (destFile.absolutePath.startsWith(externalStoragePath)) {
+                                val relativePath = destFile.absolutePath.substring(externalStoragePath.length)
+                                val hashId = com.sk.gallery.util.FileUtils.hashStringSha256(relativePath)
+                                kotlinx.coroutines.GlobalScope.launch {
+                                    kotlinx.coroutines.delay(1000)
+                                    com.sk.gallery.data.MediaRepository.getInstance(context).setCloudStatusForFile(hashId, "restored_from_vault")
+                                }
+                            }
+                        }
+                        
+                        pathsToScan.add(destFile.absolutePath)
+                        restoredCount++
+                        
+                        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                            progressBar?.progress = restoredCount * 100
+                            if (restoredCount < total) {
+                                tvProgress?.text = "Restoring ${restoredCount + 1} of $total (0%)..."
+                            } else {
+                                tvProgress?.text = "Restoring completed"
                             }
                         }
                     }
-                    
-                    MediaScannerConnection.scanFile(context, arrayOf(destFile.absolutePath), null) { _, _ -> }
-                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
-                        onSuccess()
-                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error restoring from vault", e)
                 }
-            } catch (e: Exception) {
-                Log.e(TAG, "Error restoring from vault", e)
+            }
+
+            if (restoredCount > 0) {
+                vaultMutex.withLock {
+                    saveMap(context)
+                    setCloudStatus(context, cloudStatusSet)
+                }
+                android.media.MediaScannerConnection.scanFile(context, pathsToScan.toTypedArray(), null) { _, _ -> }
+            }
+            
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                progressDialog?.dismiss()
+                onSuccess()
             }
         }
     }

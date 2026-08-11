@@ -1218,7 +1218,7 @@ class PhotoViewerActivity : AppCompatActivity() {
             .setTitle("Set as Public")
             .setMessage("Where do you want to restore this file?")
             .setPositiveButton("Original Location") { _, _ ->
-                com.sk.gallery.data.PrivateVaultManager.restoreFromVault(this, entry.hashId) {
+                com.sk.gallery.data.PrivateVaultManager.restoreFromVault(this, listOf(entry.hashId)) {
                     Toast.makeText(this, "Restored to public gallery", Toast.LENGTH_SHORT).show()
                     removeCurrentFromList()
                 }
@@ -1227,7 +1227,7 @@ class PhotoViewerActivity : AppCompatActivity() {
                 isLaunchingPicker = true
                 com.sk.gallery.util.MoveHelper.showLocationPicker(this) { targetDir ->
                     isLaunchingPicker = false
-                    com.sk.gallery.data.PrivateVaultManager.restoreFromVault(this, entry.hashId, targetDir) {
+                    com.sk.gallery.data.PrivateVaultManager.restoreFromVault(this, listOf(entry.hashId), targetDir) {
                         Toast.makeText(this, "Restored to custom location", Toast.LENGTH_SHORT).show()
                         removeCurrentFromList()
                     }
@@ -1624,6 +1624,7 @@ class PhotoViewerActivity : AppCompatActivity() {
         override fun onViewDetachedFromWindow(holder: PhotoViewHolder) {
             super.onViewDetachedFromWindow(holder)
             holder.pauseVideo()
+            holder.releasePlayer()
         }
 
         override fun getItemCount(): Int = items.size
@@ -1643,13 +1644,18 @@ class PhotoViewerActivity : AppCompatActivity() {
             private var lastTouchY = 0f
             private var activePointerId = MotionEvent.INVALID_POINTER_ID
 
+            private var exoPlayer: androidx.media3.exoplayer.ExoPlayer? = null
+
             fun pauseVideo() {
-                if (itemBinding.videoView.isPlaying) {
-                    itemBinding.videoView.pause()
-                }
+                exoPlayer?.pause()
                 isVideoPlaying = false
                 updateVideoUIState()
                 handler.removeCallbacksAndMessages(null)
+            }
+            
+            fun releasePlayer() {
+                exoPlayer?.release()
+                exoPlayer = null
             }
 
             fun bind(entry: FileEntry) {
@@ -1660,44 +1666,121 @@ class PhotoViewerActivity : AppCompatActivity() {
                     itemBinding.ivFullPhoto.visibility = View.GONE
                     itemBinding.videoContainer.visibility = View.VISIBLE
                     
+                    if (exoPlayer == null) {
+                        exoPlayer = androidx.media3.exoplayer.ExoPlayer.Builder(this@PhotoViewerActivity).build()
+                        itemBinding.videoView.player = exoPlayer
+                    }
+                    
                     val isVaultFile = entry.relativePath.contains("app_PrivateVault")
+                    val actualFile = if (file.exists()) file else File(entry.relativePath)
                     
                     if (isVaultFile) {
-                        itemBinding.pbVideoLoading.visibility = View.VISIBLE
-                        itemBinding.ivCenterPlay.visibility = View.GONE
+                        val raf = java.io.RandomAccessFile(actualFile, "r")
+                        val magic = ByteArray(4)
+                        raf.readFully(magic)
+                        raf.close()
+                        val isV2 = magic.contentEquals(byteArrayOf('S'.code.toByte(), 'K'.code.toByte(), 'V'.code.toByte(), '2'.code.toByte()))
                         
-                        lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
-                            val tempVideoFile = File(cacheDir, "temp_vault_video.mp4")
-                            try {
-                                com.sk.gallery.data.crypto.CryptoManager.decryptFileLocal(File(entry.relativePath), tempVideoFile)
-                                
-                                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
-                                    itemBinding.pbVideoLoading.visibility = View.GONE
-                                    itemBinding.ivCenterPlay.visibility = View.VISIBLE
-                                    itemBinding.videoView.setVideoPath(tempVideoFile.absolutePath)
-                                    setupVideoListeners() // We'll extract listeners to avoid code duplication
+                        if (isV2) {
+                            itemBinding.pbVideoLoading.visibility = View.GONE
+                            itemBinding.ivCenterPlay.visibility = View.VISIBLE
+                            
+                            val dataSourceFactory = androidx.media3.datasource.DataSource.Factory {
+                                val fileDataSource = androidx.media3.datasource.FileDataSource()
+                                com.sk.gallery.util.AesCtrDataSource(
+                                    fileDataSource,
+                                    com.sk.gallery.data.crypto.CryptoManager.getV2SecretKeyRaw(),
+                                    actualFile
+                                )
+                            }
+                            val mediaSource = androidx.media3.exoplayer.source.ProgressiveMediaSource.Factory(dataSourceFactory)
+                                .createMediaSource(androidx.media3.common.MediaItem.fromUri(android.net.Uri.fromFile(actualFile)))
+                            
+                            exoPlayer?.setMediaSource(mediaSource)
+                            exoPlayer?.prepare()
+                            setupVideoListeners()
+                        } else {
+                            itemBinding.pbVideoLoading.visibility = View.VISIBLE
+                            itemBinding.ivCenterPlay.visibility = View.GONE
+                            
+                            // Show progress text if not exists, create dynamically if needed
+                            var tvProgress = itemBinding.videoContainer.findViewById<android.widget.TextView>(android.view.View.generateViewId())
+                            if (tvProgress == null) {
+                                tvProgress = android.widget.TextView(this@PhotoViewerActivity).apply {
+                                    text = "Decrypting 0%..."
+                                    setTextColor(android.graphics.Color.WHITE)
+                                    textSize = 14f
+                                    // Center below progress bar
+                                    val params = android.widget.RelativeLayout.LayoutParams(
+                                        android.widget.RelativeLayout.LayoutParams.WRAP_CONTENT,
+                                        android.widget.RelativeLayout.LayoutParams.WRAP_CONTENT
+                                    )
+                                    params.addRule(android.widget.RelativeLayout.BELOW, itemBinding.pbVideoLoading.id)
+                                    params.addRule(android.widget.RelativeLayout.CENTER_HORIZONTAL)
+                                    params.topMargin = 16
+                                    layoutParams = params
                                 }
-                            } catch (e: Exception) {
-                                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
-                                    itemBinding.pbVideoLoading.visibility = View.GONE
-                                    showToast("Failed to decrypt video")
+                                // Add to video container, assuming it's a relative layout
+                                (itemBinding.videoContainer as? android.view.ViewGroup)?.addView(tvProgress)
+                            } else {
+                                tvProgress.visibility = View.VISIBLE
+                                tvProgress.text = "Decrypting 0%..."
+                            }
+                            
+                            lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                                val tempVideoFile = File(cacheDir, "temp_vault_video.mp4")
+                                try {
+                                    com.sk.gallery.data.crypto.CryptoManager.decryptFileLocal(
+                                        actualFile, 
+                                        tempVideoFile,
+                                        onProgress = { percent ->
+                                            kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.Main) {
+                                                tvProgress.text = "Decrypting $percent%..."
+                                            }
+                                        },
+                                        cancelSignal = { !isActive }
+                                    )
+                                    
+                                    if (isActive) {
+                                        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                                            itemBinding.pbVideoLoading.visibility = View.GONE
+                                            tvProgress.visibility = View.GONE
+                                            itemBinding.ivCenterPlay.visibility = View.VISIBLE
+                                            exoPlayer?.setMediaItem(androidx.media3.common.MediaItem.fromUri(android.net.Uri.fromFile(tempVideoFile)))
+                                            exoPlayer?.prepare()
+                                            setupVideoListeners() 
+                                        }
+                                    } else {
+                                        if (tempVideoFile.exists()) tempVideoFile.delete()
+                                    }
+                                } catch (e: Exception) {
+                                    if (isActive) {
+                                        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                                            itemBinding.pbVideoLoading.visibility = View.GONE
+                                            tvProgress.visibility = View.GONE
+                                            showToast("Failed to decrypt video")
+                                        }
+                                    }
                                 }
                             }
                         }
                     } else {
-                        itemBinding.videoView.setVideoPath(if (file.exists()) file.absolutePath else entry.relativePath)
+                        exoPlayer?.setMediaItem(androidx.media3.common.MediaItem.fromUri(android.net.Uri.fromFile(actualFile)))
+                        exoPlayer?.prepare()
                         setupVideoListeners()
                     }
 
                     // Setup controls
                     val togglePlay = {
-                        if (itemBinding.videoView.isPlaying) {
-                            pauseVideo()
-                        } else {
-                            itemBinding.videoView.start()
-                            isVideoPlaying = true
-                            updateVideoUIState()
-                            startProgressUpdater()
+                        exoPlayer?.let { player ->
+                            if (player.isPlaying) {
+                                pauseVideo()
+                            } else {
+                                player.play()
+                                isVideoPlaying = true
+                                updateVideoUIState()
+                                startProgressUpdater()
+                            }
                         }
                     }
 
@@ -1707,8 +1790,8 @@ class PhotoViewerActivity : AppCompatActivity() {
                     itemBinding.seekBarVideo.setOnSeekBarChangeListener(object : android.widget.SeekBar.OnSeekBarChangeListener {
                         override fun onProgressChanged(seekBar: android.widget.SeekBar?, progress: Int, fromUser: Boolean) {
                             if (fromUser) {
-                                itemBinding.videoView.seekTo(progress)
-                                itemBinding.tvVideoTime.text = "${com.sk.gallery.util.FileUtils.formatDuration(progress.toLong())} / ${com.sk.gallery.util.FileUtils.formatDuration(itemBinding.videoView.duration.toLong())}"
+                                exoPlayer?.seekTo(progress.toLong())
+                                itemBinding.tvVideoTime.text = "${com.sk.gallery.util.FileUtils.formatDuration(progress.toLong())} / ${com.sk.gallery.util.FileUtils.formatDuration(exoPlayer?.duration ?: 0L)}"
                             }
                         }
                         override fun onStartTrackingTouch(seekBar: android.widget.SeekBar?) {}
@@ -1879,20 +1962,22 @@ class PhotoViewerActivity : AppCompatActivity() {
             }
             
             private fun setupVideoListeners() {
-                itemBinding.videoView.setOnPreparedListener { player ->
-                    player.setVolume(1f, 1f)
-                    itemBinding.seekBarVideo.max = player.duration
-                    itemBinding.tvVideoTime.text = "00:00 / ${com.sk.gallery.util.FileUtils.formatDuration(player.duration.toLong())}"
-                    itemBinding.videoView.seekTo(1)
-                }
-
-                itemBinding.videoView.setOnCompletionListener {
-                    isVideoPlaying = false
-                    updateVideoUIState()
-                    itemBinding.videoView.seekTo(1)
-                    itemBinding.seekBarVideo.progress = 0
-                    handler.removeCallbacksAndMessages(null)
-                }
+                exoPlayer?.addListener(object : androidx.media3.common.Player.Listener {
+                    override fun onPlaybackStateChanged(playbackState: Int) {
+                        if (playbackState == androidx.media3.common.Player.STATE_READY) {
+                            itemBinding.seekBarVideo.max = exoPlayer?.duration?.toInt() ?: 0
+                            val dur = exoPlayer?.duration ?: 0L
+                            itemBinding.tvVideoTime.text = "00:00 / ${com.sk.gallery.util.FileUtils.formatDuration(dur)}"
+                            // We don't auto-seek to 1 for ExoPlayer since it renders the first frame automatically
+                        } else if (playbackState == androidx.media3.common.Player.STATE_ENDED) {
+                            exoPlayer?.seekTo(0)
+                            pauseVideo()
+                            itemBinding.seekBarVideo.progress = 0
+                            val dur = exoPlayer?.duration ?: 0L
+                            itemBinding.tvVideoTime.text = "00:00 / ${com.sk.gallery.util.FileUtils.formatDuration(dur)}"
+                        }
+                    }
+                })
             }
             
             private fun updateVideoUIState() {
@@ -1910,11 +1995,17 @@ class PhotoViewerActivity : AppCompatActivity() {
             private fun startProgressUpdater() {
                 updateProgressRunnable = object : Runnable {
                     override fun run() {
-                        if (itemBinding.videoView.isPlaying) {
-                            val currentPos = itemBinding.videoView.currentPosition
-                            itemBinding.seekBarVideo.progress = currentPos
-                            itemBinding.tvVideoTime.text = "${com.sk.gallery.util.FileUtils.formatDuration(currentPos.toLong())} / ${com.sk.gallery.util.FileUtils.formatDuration(itemBinding.videoView.duration.toLong())}"
-                            handler.postDelayed(this, 500)
+                        val player = exoPlayer ?: return
+                        if (player.isPlaying) {
+                            val currentPos = player.currentPosition.toInt()
+                            val duration = player.duration.toInt()
+                            
+                            if (duration > 0) {
+                                itemBinding.seekBarVideo.max = duration
+                                itemBinding.seekBarVideo.progress = currentPos
+                                itemBinding.tvVideoTime.text = "${com.sk.gallery.util.FileUtils.formatDuration(currentPos.toLong())} / ${com.sk.gallery.util.FileUtils.formatDuration(duration.toLong())}"
+                            }
+                            handler.postDelayed(this, 100)
                         }
                     }
                 }
