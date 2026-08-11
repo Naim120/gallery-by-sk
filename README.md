@@ -21,6 +21,7 @@ When switching to a new phone, most cloud backups (like Google Photos) lump all 
 ## Key Features
 
 - **Clean & Familiar UI**: A straightforward, easy-to-use gallery experience.
+- **Theme Support**: Seamlessly adapts to your device's Light or Dark mode.
 - **Flawless Cloud Backup (Google Drive)**: Export and Import your photos while maintaining original folders and timestamps.
 - **Built-in Editor**: Crop, rotate, add text, draw, apply filters, and adjust brightness/contrast directly in the app.
 - **Private Safe**: A secure, isolated vault for your sensitive media.

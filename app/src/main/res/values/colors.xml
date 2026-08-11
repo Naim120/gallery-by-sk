@@ -1,26 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Deep Obsidian Dark Mode Palette -->
-    <color name="bg_dark">#121212</color>
-    <color name="surface_dark">#121212</color>
-    <color name="surface_card">#1A1A1A</color>
-    <color name="surface_card_border">#333333</color>
+    <!-- Crisp Light Mode Palette -->
+    <color name="bg_primary">#F8F9FA</color>
+    <color name="surface_primary">#FFFFFF</color>
+    <color name="surface_card">#FFFFFF</color>
+    <color name="surface_card_border">#E5E7EB</color>
 
-    <!-- Electric Accent Colors -->
-    <color name="accent_primary">#FFFFFF</color>
-    <color name="accent_primary_variant">#E0E0E0</color>
-    <color name="accent_secondary">#A0A0A0</color>
-    <color name="accent_cyan">#06B6D4</color>
-    <color name="accent_amber">#F59E0B</color>
-    <color name="accent_rose">#F43F5E</color>
+    <!-- Electric Accent Colors (Darker for Light Mode to maintain contrast) -->
+    <color name="accent_primary">#111827</color>
+    <color name="accent_primary_variant">#374151</color>
+    <color name="accent_secondary">#4B5563</color>
+    
+    <!-- Retaining vivid brand colors -->
+    <color name="accent_cyan">#0891B2</color>
+    <color name="accent_amber">#D97706</color>
+    <color name="accent_rose">#E11D48</color>
 
     <!-- Text & Content Colors -->
-    <color name="text_primary">#FFFFFF</color>
-    <color name="text_secondary">#A0A0A0</color>
-    <color name="text_muted">#808080</color>
+    <color name="text_primary">#111827</color>
+    <color name="text_secondary">#4B5563</color>
+    <color name="text_muted">#6B7280</color>
 
     <!-- Status Colors -->
-    <color name="status_connected">#10B981</color>
-    <color name="status_syncing">#3B82F6</color>
-    <color name="ghost_overlay">#CC000000</color>
+    <color name="status_connected">#059669</color>
+    <color name="status_syncing">#2563EB</color>
+    <color name="ghost_overlay">#33000000</color>
 </resources>

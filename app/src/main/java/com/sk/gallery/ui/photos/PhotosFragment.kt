@@ -85,8 +85,17 @@ class PhotosFragment : Fragment() {
         return binding.root
     }
 
+    private val backPressedCallback = object : androidx.activity.OnBackPressedCallback(false) {
+        override fun handleOnBackPressed() {
+            clearSelectionIfActive()
+        }
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, backPressedCallback)
+        
         repository = MediaRepository.getInstance(requireContext())
         preferences = AppPreferences(requireContext())
 
@@ -210,7 +219,13 @@ class PhotosFragment : Fragment() {
         }
 
         binding.btnSelectAll.setOnClickListener {
-            adapter.selectAll()
+            val totalSelectable = allEntriesList.count { !it.isMissingLocally }
+            val isAllSelected = totalSelectable > 0 && adapter.selectedEntries.size == totalSelectable
+            if (isAllSelected) {
+                adapter.deselectAll()
+            } else {
+                adapter.selectAll()
+            }
             updateSelectionUI()
         }
 
@@ -306,11 +321,19 @@ class PhotosFragment : Fragment() {
 
     private fun updateSelectionUI() {
         val activity = activity as? MainActivity
+        
+        // Update hardware back button handler
+        backPressedCallback.isEnabled = adapter.isSelectionMode
+        
         if (adapter.isSelectionMode) {
             binding.selectionTopBar.visibility = View.VISIBLE
             binding.selectionBottomBar.visibility = View.VISIBLE
             binding.tvSelectionCount.text = "${adapter.selectedEntries.size} selected"
             activity?.setFloatingNavVisibility(false)
+            
+            val totalSelectable = allEntriesList.count { !it.isMissingLocally }
+            val isAllSelected = totalSelectable > 0 && adapter.selectedEntries.size == totalSelectable
+            binding.btnSelectAll.text = if (isAllSelected) "Deselect All" else "Select All"
 
             val allFav = adapter.selectedEntries.isNotEmpty() && adapter.selectedEntries.all { preferences.isFavorite(it.hashId) }
             val favColor = if (allFav) Color.parseColor("#FF5252") else Color.WHITE

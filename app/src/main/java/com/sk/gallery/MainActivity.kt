@@ -77,19 +77,22 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateTabSelection(position: Int) {
+        val activeTextColor = androidx.core.content.ContextCompat.getColor(this, R.color.bg_primary)
+        val inactiveTextColor = androidx.core.content.ContextCompat.getColor(this, R.color.text_secondary)
+
         binding.tabPhotos.apply {
             setBackgroundResource(if (position == 0) R.drawable.bg_tab_active else android.R.color.transparent)
-            setTextColor(if (position == 0) Color.BLACK else Color.parseColor("#A0A0A0"))
+            setTextColor(if (position == 0) activeTextColor else inactiveTextColor)
         }
 
         binding.tabAlbums.apply {
             setBackgroundResource(if (position == 1) R.drawable.bg_tab_active else android.R.color.transparent)
-            setTextColor(if (position == 1) Color.BLACK else Color.parseColor("#A0A0A0"))
+            setTextColor(if (position == 1) activeTextColor else inactiveTextColor)
         }
 
         binding.tabCloud.apply {
             setBackgroundResource(if (position == 2) R.drawable.bg_tab_active else android.R.color.transparent)
-            setTextColor(if (position == 2) Color.BLACK else Color.parseColor("#A0A0A0"))
+            setTextColor(if (position == 2) activeTextColor else inactiveTextColor)
         }
     }
 
@@ -109,8 +112,13 @@ class MainActivity : AppCompatActivity() {
     private fun setupTopMenu() {
         binding.btnMainMenu.setOnClickListener { view ->
             val popup = PopupMenu(this, view)
-            popup.menu.add(0, 1, 0, "Sort by")
-            popup.menu.add(0, 2, 1, "Grid Columns")
+            
+            // Only show Sort and Grid options when on the Photos tab (index 0)
+            if (binding.viewPager.currentItem == 0) {
+                popup.menu.add(0, 1, 0, "Sort by")
+                popup.menu.add(0, 2, 1, "Grid Columns")
+            }
+            
             popup.menu.add(0, 3, 2, "Private Safe")
             popup.menu.add(0, 4, 3, "About")
 

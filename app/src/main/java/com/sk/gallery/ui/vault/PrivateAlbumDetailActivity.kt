@@ -38,6 +38,32 @@ class PrivateAlbumDetailActivity : AppCompatActivity() {
         // Hide unused UI
         binding.selectionTopBar.visibility = View.GONE
         binding.selectionBottomBar.visibility = View.GONE
+        binding.btnAlbumMenu.visibility = View.GONE // Remove unused 3-dot menu in Private Safe
+        
+        // Force Dark Theme appearance for the Private Vault
+        binding.root.setBackgroundColor(android.graphics.Color.parseColor("#121212"))
+        binding.tvAlbumDetailTitle.setTextColor(android.graphics.Color.WHITE)
+        binding.btnAlbumBack.setColorFilter(android.graphics.Color.WHITE)
+        binding.btnCloseSelection.setColorFilter(android.graphics.Color.WHITE)
+        binding.tvSelectionCount.setTextColor(android.graphics.Color.WHITE)
+        binding.btnSelectAll.setTextColor(android.graphics.Color.WHITE)
+        binding.selectionTopBar.setBackgroundColor(android.graphics.Color.parseColor("#1A1A1A"))
+        
+        window.statusBarColor = android.graphics.Color.parseColor("#121212")
+        androidx.core.view.WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = false
+        
+        onBackPressedDispatcher.addCallback(this, object : androidx.activity.OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (::adapter.isInitialized && adapter.isSelectionMode) {
+                    adapter.clearSelectionMode()
+                    binding.selectionTopBar.visibility = View.GONE
+                    binding.selectionBottomBar.visibility = View.GONE
+                } else {
+                    isEnabled = false
+                    onBackPressedDispatcher.onBackPressed()
+                }
+            }
+        })
 
         val prefs = AppPreferences(this)
         val columns = prefs.getGridColumns()
@@ -70,9 +96,17 @@ class PrivateAlbumDetailActivity : AppCompatActivity() {
                     tvPrivate.text = "Set Public"
                     val ivPrivate = binding.btnActionPrivate.getChildAt(0) as android.widget.ImageView
                     ivPrivate.setImageResource(R.drawable.ic_public_modern)
+                    
+                    val totalMedia = albumEntries.size
+                    if (selectedEntries.size == totalMedia && totalMedia > 0) {
+                        binding.btnSelectAll.text = "Deselect All"
+                    } else {
+                        binding.btnSelectAll.text = "Select All"
+                    }
                 } else {
                     binding.selectionTopBar.visibility = View.GONE
                     binding.selectionBottomBar.visibility = View.GONE
+                    binding.btnSelectAll.text = "Select All"
                 }
             }
         )
@@ -120,6 +154,15 @@ class PrivateAlbumDetailActivity : AppCompatActivity() {
             adapter.clearSelectionMode()
             binding.selectionTopBar.visibility = View.GONE
             binding.selectionBottomBar.visibility = View.GONE
+        }
+        
+        binding.btnSelectAll.setOnClickListener {
+            val totalMedia = albumEntries.size
+            if (adapter.selectedEntries.size == totalMedia && totalMedia > 0) {
+                adapter.deselectAll()
+            } else {
+                adapter.selectAll()
+            }
         }
 
         val gridLayoutManager = GridLayoutManager(this, columns)

@@ -87,7 +87,7 @@ class TrashAdapter(
             Glide.with(itemView.context)
                 .load(file)
                 .centerCrop()
-                .placeholder(R.color.bg_dark)
+                .placeholder(R.color.bg_primary)
                 .into(ivThumbnail)
 
             ivVideoIcon.visibility = if (entry.mimeType.startsWith("video", ignoreCase = true)) View.VISIBLE else View.GONE

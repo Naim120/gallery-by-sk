@@ -12,6 +12,7 @@ class AppPreferences(context: Context) {
         private const val KEY_FAVORITES = "favorites"
         private const val KEY_PRIVATE = "private_items"
         private const val KEY_GRID_COLUMNS = "grid_columns"
+        private const val KEY_ALBUM_GRID_COLUMNS = "album_grid_columns"
         private const val KEY_SORT_BY = "sort_by"
         private const val KEY_CUSTOM_ALBUMS = "custom_albums"
         private const val KEY_ALBUM_ALIASES = "album_aliases"
@@ -67,6 +68,14 @@ class AppPreferences(context: Context) {
 
     fun setGridColumns(columns: Int) {
         prefs.edit().putInt(KEY_GRID_COLUMNS, columns).apply()
+    }
+
+    fun getAlbumGridColumns(): Int {
+        return prefs.getInt(KEY_ALBUM_GRID_COLUMNS, 3)
+    }
+
+    fun setAlbumGridColumns(columns: Int) {
+        prefs.edit().putInt(KEY_ALBUM_GRID_COLUMNS, columns).apply()
     }
 
     fun getSortBy(): String {

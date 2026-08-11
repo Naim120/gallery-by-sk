@@ -55,6 +55,13 @@ class MediaAdapter(
         onSelectionChanged?.invoke(selectedEntries)
     }
 
+    fun deselectAll() {
+        selectedEntries.clear()
+        isSelectionMode = false
+        notifyDataSetChanged()
+        onSelectionChanged?.invoke(selectedEntries)
+    }
+
     fun toggleSelection(entry: FileEntry) {
         if (selectedEntries.contains(entry)) {
             selectedEntries.remove(entry)

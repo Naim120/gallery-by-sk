@@ -93,6 +93,9 @@ class AlbumsFragment : Fragment() {
 
     private fun observeAlbums() {
         viewLifecycleOwner.lifecycleScope.launch {
+            // Delay slightly to prevent the heavy grouping logic from lagging the ViewPager swipe animation
+            kotlinx.coroutines.delay(150)
+            
             repository.mediaFlow.collect { allMedia ->
                 refreshAlbumsUI(allMedia)
             }

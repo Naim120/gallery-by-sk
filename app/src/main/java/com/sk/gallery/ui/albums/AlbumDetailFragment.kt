@@ -98,9 +98,12 @@ class AlbumDetailFragment : Fragment() {
             }
         }
 
+        val prefs = AppPreferences(requireContext())
+        val columns = prefs.getAlbumGridColumns()
+
         adapter = MediaAdapter(
             entries = emptyList(),
-            spanCount = 4,
+            spanCount = columns,
             onItemClick = { entry ->
                 val index = albumEntries.indexOf(entry)
                 PhotoViewerActivity.currentPhotoList = albumEntries
@@ -120,7 +123,7 @@ class AlbumDetailFragment : Fragment() {
             onMarkMissingClick = {}
         )
 
-        binding.rvAlbumDetailGrid.layoutManager = GridLayoutManager(requireContext(), 4)
+        binding.rvAlbumDetailGrid.layoutManager = GridLayoutManager(requireContext(), columns)
         binding.rvAlbumDetailGrid.setHasFixedSize(true)
         binding.rvAlbumDetailGrid.setItemViewCacheSize(20)
         binding.rvAlbumDetailGrid.adapter = adapter
@@ -136,7 +139,66 @@ class AlbumDetailFragment : Fragment() {
 
         setupSelectionActions()
         setupBackPressedHandler()
+        setupTopMenu()
         loadAlbumMedia()
+    }
+
+    private fun setupTopMenu() {
+        binding.btnAlbumMenu.setOnClickListener { view ->
+            val popup = android.widget.PopupMenu(requireContext(), view)
+            popup.menu.add(0, 1, 0, "Grid Columns")
+            
+            popup.setOnMenuItemClickListener { item ->
+                when (item.itemId) {
+                    1 -> {
+                        showGridColumnsDialog()
+                        true
+                    }
+                    else -> false
+                }
+            }
+            popup.show()
+        }
+    }
+
+    private fun showGridColumnsDialog() {
+        val prefs = AppPreferences(requireContext())
+        val options = arrayOf("2 Columns", "3 Columns", "4 Columns", "5 Columns")
+        val currentCols = prefs.getAlbumGridColumns()
+        val checkedItem = (currentCols - 2).coerceIn(0, 3)
+
+        com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Grid Columns")
+            .setSingleChoiceItems(options, checkedItem) { dialog, which ->
+                val newCols = which + 2
+                prefs.setAlbumGridColumns(newCols)
+                
+                binding.rvAlbumDetailGrid.layoutManager = GridLayoutManager(requireContext(), newCols)
+                val scrollPos = (binding.rvAlbumDetailGrid.layoutManager as GridLayoutManager).findFirstVisibleItemPosition()
+                
+                adapter = MediaAdapter(
+                    entries = albumEntries,
+                    spanCount = newCols,
+                    onItemClick = { entry ->
+                        val index = albumEntries.indexOf(entry)
+                        PhotoViewerActivity.currentPhotoList = albumEntries
+                        val intent = Intent(requireContext(), PhotoViewerActivity::class.java).apply {
+                            putExtra(PhotoViewerActivity.EXTRA_INITIAL_INDEX, if (index >= 0) index else 0)
+                        }
+                        startActivity(intent)
+                        requireActivity().overridePendingTransition(R.anim.zoom_in, R.anim.hold)
+                    },
+                    onItemLongClick = { _ -> updateSelectionUI() },
+                    onSelectionChanged = { _ -> updateSelectionUI() },
+                    onFetchCloudClick = {},
+                    onMarkMissingClick = {}
+                )
+                binding.rvAlbumDetailGrid.adapter = adapter
+                binding.rvAlbumDetailGrid.scrollToPosition(scrollPos)
+                dialog.dismiss()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 
     override fun onResume() {
@@ -175,6 +237,10 @@ class AlbumDetailFragment : Fragment() {
             binding.tvSelectionCount.text = "${adapter.selectedEntries.size} selected"
             activity?.setFloatingNavVisibility(false)
 
+            val totalSelectable = albumEntries.count { !it.isMissingLocally }
+            val isAllSelected = totalSelectable > 0 && adapter.selectedEntries.size == totalSelectable
+            binding.btnSelectAll.text = if (isAllSelected) "Deselect All" else "Select All"
+
             val preferences = AppPreferences(requireContext())
             val allFav = adapter.selectedEntries.isNotEmpty() && adapter.selectedEntries.all { preferences.isFavorite(it.hashId) }
             val favColor = if (allFav) Color.parseColor("#FF5252") else Color.WHITE
@@ -195,19 +261,26 @@ class AlbumDetailFragment : Fragment() {
         }
 
         binding.btnSelectAll.setOnClickListener {
-            adapter.selectAll()
+            val totalSelectable = albumEntries.count { !it.isMissingLocally }
+            val isAllSelected = totalSelectable > 0 && adapter.selectedEntries.size == totalSelectable
+            if (isAllSelected) {
+                adapter.deselectAll()
+            } else {
+                adapter.selectAll()
+            }
             updateSelectionUI()
         }
 
         binding.btnActionPrivate.setOnClickListener {
             val selected = adapter.selectedEntries.toList()
-            val preferences = AppPreferences(requireContext())
-            for (entry in selected) {
-                preferences.togglePrivate(entry.hashId)
+            if (selected.isEmpty()) return@setOnClickListener
+            
+            com.sk.gallery.data.PrivateVaultManager.moveToVault(requireContext(), selected) {
+                repository.removeEntriesInstantly(selected)
+                Toast.makeText(requireContext(), "Moved ${selected.size} items to Private Safe", Toast.LENGTH_SHORT).show()
+                adapter.clearSelectionMode()
+                updateSelectionUI()
             }
-            Toast.makeText(requireContext(), "Moved ${selected.size} items to Private", Toast.LENGTH_SHORT).show()
-            adapter.clearSelectionMode()
-            updateSelectionUI()
         }
 
         binding.btnActionFavourite.setOnClickListener {
@@ -291,8 +364,42 @@ class AlbumDetailFragment : Fragment() {
 
     private fun loadAlbumMedia() {
         viewLifecycleOwner.lifecycleScope.launch {
+            // Delay slightly to allow the fragment enter animation to play smoothly
+            kotlinx.coroutines.delay(250)
+            
             repository.mediaFlow.collect { allMedia ->
-                refreshAlbumEntries(allMedia)
+                if (allMedia.isEmpty() && ::repository.isInitialized) {
+                    repository.loadInitialMedia()
+                }
+                
+                val sortedEntries = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+                    val entries = when (albumTitle) {
+                        "Recent" -> repository.getRecentMedia()
+                        "Camera" -> repository.getCameraMedia()
+                        "Favourites" -> repository.getFavorites()
+                        "Screenshots" -> repository.getScreenshots()
+                        "Videos" -> repository.getVideos()
+                        "WhatsApp Images" -> allMedia.filter { it.relativePath.contains("WhatsApp", ignoreCase = true) && !it.relativePath.contains("Documents", ignoreCase = true) && !it.mimeType.startsWith("video", ignoreCase = true) }
+                        "WhatsApp Documents" -> allMedia.filter { it.relativePath.contains("WhatsApp", ignoreCase = true) && it.relativePath.contains("Documents", ignoreCase = true) }
+                        "WhatsApp Videos" -> allMedia.filter { it.relativePath.contains("WhatsApp", ignoreCase = true) && it.mimeType.startsWith("video", ignoreCase = true) }
+                        else -> allMedia.filter {
+                            val albumPathForFile = com.sk.gallery.util.FileUtils.getAlbumRelativePath(it.relativePath)
+                            albumPathForFile.equals(albumPath, ignoreCase = true)
+                        }
+                    }
+                    // Only sort if it wasn't already sorted by getRecentMedia
+                    if (albumTitle == "Recent") entries else entries.applySort(AppPreferences(requireContext()))
+                }
+                
+                albumEntries = sortedEntries
+                if (albumEntries.isEmpty()) {
+                    binding.rvAlbumDetailGrid.visibility = android.view.View.GONE
+                    binding.tvEmptyAlbum.visibility = android.view.View.VISIBLE
+                } else {
+                    binding.rvAlbumDetailGrid.visibility = android.view.View.VISIBLE
+                    binding.tvEmptyAlbum.visibility = android.view.View.GONE
+                    adapter.updateEntries(albumEntries)
+                }
             }
         }
     }

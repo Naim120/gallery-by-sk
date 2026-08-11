@@ -142,7 +142,7 @@ class CloudVaultFragment : Fragment() {
     }
 
     private fun selectTab(index: Int) {
-        val activeColor = requireContext().getColor(R.color.bg_dark)
+        val activeColor = requireContext().getColor(R.color.bg_primary)
         val inactiveColor = requireContext().getColor(R.color.text_muted)
 
         // Reset all tabs

@@ -5,9 +5,12 @@
         <item name="colorOnPrimary">@color/text_primary</item>
         <item name="colorSecondary">@color/accent_secondary</item>
         <item name="colorOnSecondary">@color/text_primary</item>
-        <item name="android:statusBarColor">@color/bg_dark</item>
-        <item name="android:navigationBarColor">@color/bg_dark</item>
-        <item name="android:windowBackground">@color/bg_dark</item>
+        <item name="android:statusBarColor">@color/bg_primary</item>
+        <item name="android:navigationBarColor">@color/bg_primary</item>
+        <item name="android:windowBackground">@color/bg_primary</item>
+        <item name="colorSurface">@color/surface_primary</item>
+        <item name="colorSurfaceVariant">@color/surface_primary</item>
+        <item name="android:windowLightStatusBar">true</item>
     </style>
 
     <style name="Theme.GalleryBySK.PrivateSafe" parent="Theme.GalleryBySK">

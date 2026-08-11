@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg_dark"
+    android:background="@color/bg_primary"
     android:fillViewport="true">
 
     <LinearLayout
@@ -130,7 +130,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="48dp"
                             android:text="Connect Google Drive"
-                            android:textColor="@color/bg_dark"
+                            android:textColor="@color/bg_primary"
                             app:backgroundTint="@color/text_primary"
                             app:cornerRadius="12dp"
                             app:icon="@drawable/ic_google_drive"
@@ -213,7 +213,7 @@
                                 android:gravity="center"
                                 android:padding="8dp"
                                 android:text="Export (Backup)"
-                                android:textColor="@color/bg_dark"
+                                android:textColor="@color/bg_primary"
                                 android:textSize="13sp"
                                 android:textStyle="bold"
                                 android:background="@drawable/bg_tab_active" />
@@ -348,7 +348,7 @@
                                     android:layout_height="52dp"
                                     android:layout_weight="1"
                                     android:text="Export Now"
-                                    android:textColor="@color/bg_dark"
+                                    android:textColor="@color/bg_primary"
                                     android:textSize="15sp"
                                     app:backgroundTint="@color/accent_primary" />
 
@@ -409,7 +409,7 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="52dp"
                                 android:text="Scan Google Drive for Backup"
-                                android:textColor="@color/bg_dark"
+                                android:textColor="@color/bg_primary"
                                 android:layout_marginBottom="16dp"
                                 app:backgroundTint="@color/accent_primary" />
 
@@ -505,7 +505,7 @@
                                     android:layout_height="52dp"
                                     android:layout_weight="1"
                                     android:text="Restore Now"
-                                    android:textColor="@color/bg_dark"
+                                    android:textColor="@color/bg_primary"
                                     android:textSize="15sp"
                                     app:backgroundTint="@color/accent_primary" />
 
@@ -727,7 +727,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="50dp"
                         android:text="Connect - Coming Soon"
-                        android:textColor="@color/bg_dark"
+                        android:textColor="@color/bg_primary"
                         android:textStyle="bold"
                         android:enabled="false"
                         app:backgroundTint="#FF9900"

@@ -34,6 +34,7 @@ class VaultSecurityActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
+        androidx.core.view.WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = false
         setTheme(R.style.Theme_GalleryBySK_PrivateSafe)
         binding = ActivityVaultSecurityBinding.inflate(layoutInflater)
         setContentView(binding.root)

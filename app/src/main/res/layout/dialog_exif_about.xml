@@ -18,7 +18,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Details"
-        android:textColor="#FFFFFF"
+        android:textColor="@color/text_primary"
         android:textSize="20sp"
         android:textStyle="bold" />
 
@@ -32,7 +32,7 @@
             android:id="@+id/tv_detail_filename"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="#FFFFFF"
+            android:textColor="@color/text_primary"
             android:textSize="16sp"
             android:textStyle="bold" />
 

@@ -97,6 +97,13 @@ class TimelineAdapter(
         onSelectionChanged(selectedEntries)
     }
 
+    fun deselectAll() {
+        selectedEntries.clear()
+        isSelectionMode = false
+        notifyDataSetChanged()
+        onSelectionChanged(selectedEntries)
+    }
+
     fun toggleSelection(entry: FileEntry) {
         if (selectedEntries.contains(entry)) {
             selectedEntries.remove(entry)

@@ -34,6 +34,9 @@ class PrivateSafeActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         window.setFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE, android.view.WindowManager.LayoutParams.FLAG_SECURE)
+        window.statusBarColor = android.graphics.Color.parseColor("#121212")
+        androidx.core.view.WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = false
+        
         binding = ActivityPrivateSafeBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -131,9 +134,19 @@ class VaultTimelineFragment : Fragment(), VaultRefreshable {
         _binding = FragmentPhotosBinding.inflate(inflater, container, false)
         return binding.root
     }
+    
+    private val backPressedCallback = object : androidx.activity.OnBackPressedCallback(false) {
+        override fun handleOnBackPressed() {
+            if (::adapter.isInitialized && adapter.isSelectionMode) {
+                adapter.clearSelectionMode()
+            }
+        }
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, backPressedCallback)
         
         // Hide unused main gallery UI elements
         binding.layoutPermissionDenied.visibility = View.GONE
@@ -161,6 +174,7 @@ class VaultTimelineFragment : Fragment(), VaultRefreshable {
             },
             onItemLongClick = { _ -> },
             onSelectionChanged = { selectedEntries ->
+                backPressedCallback.isEnabled = adapter.isSelectionMode
                 if (selectedEntries.isNotEmpty()) {
                     binding.selectionTopBar.visibility = View.VISIBLE
                     binding.selectionBottomBar.visibility = View.VISIBLE
