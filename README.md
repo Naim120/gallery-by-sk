@@ -91,6 +91,29 @@ It permanently removes the backup for the selected device from Google Drive and 
 - Advanced editing tools (Blur, Sharpness).
 - Custom themes and background colors.
 
+## For Developers: Local Setup
+
+To run and build Gallery by SK locally, you need to configure a few local secrets (like your Google API Client ID). These are deliberately kept out of version control for security.
+
+1. Clone the repository.
+2. In the root of the project, create a file named `secrets.properties`. (You can copy the provided `secrets.properties.example` file and rename it).
+3. Fill in the required values:
+
+```properties
+# Required for Google Drive Cloud Backup.
+# You can get this by creating an Android OAuth client in the Google Cloud Console.
+OAUTH_CLIENT_ID=YOUR_GOOGLE_CLOUD_OAUTH_CLIENT_ID
+
+# Required for building a Release APK.
+# You can generate a keystore using Android Studio or the keytool CLI.
+KEYSTORE_FILE=../release.keystore
+KEYSTORE_PASSWORD=YOUR_KEYSTORE_PASSWORD
+KEY_ALIAS=YOUR_KEY_ALIAS
+KEY_PASSWORD=YOUR_KEY_PASSWORD
+```
+
+*Note: The `secrets.properties` file is included in `.gitignore` and will never be uploaded to GitHub.*
+
 ## License
 
 This project is open-source and free to use for personal, academic, and educational purposes. **Commercial use is strictly prohibited.** You may not use, modify, or distribute this software to generate revenue, directly or indirectly. For full details, please see the [LICENSE](LICENSE) file.
