@@ -171,6 +171,17 @@ class PhotoViewerActivity : AppCompatActivity() {
         }
     }
 
+    override fun onPause() {
+        super.onPause()
+        try {
+            val rv = binding.viewerViewPager.getChildAt(0) as? androidx.recyclerview.widget.RecyclerView
+            val holder = rv?.findViewHolderForAdapterPosition(currentIndex) as? PhotoPagerAdapter.PhotoViewHolder
+            holder?.pauseVideo()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityPhotoViewerBinding.inflate(layoutInflater)
@@ -262,13 +273,33 @@ class PhotoViewerActivity : AppCompatActivity() {
             exitEditModeWithPrompt()
         }
 
+        binding.btnEditMainUndo.setOnClickListener {
+            mPhotoEditor.undo()
+        }
+
+        binding.btnEditMainRedo.setOnClickListener {
+            mPhotoEditor.redo()
+        }
+
         binding.btnEditMainSave.setOnClickListener {
-            // Save button is only visible when hasUnsavedChanges is true
-            showSaveDialog()
+            // Bake layers into bitmap before showing save dialog
+            lifecycleScope.launch {
+                try {
+                    val fullBitmap = mPhotoEditor.saveAsBitmap()
+                    if (fullBitmap != null) {
+                        currentBitmap = fullBitmap
+                    }
+                } catch (e: Exception) {}
+                showSaveDialog()
+            }
         }
 
         binding.btnEditSubCancel.setOnClickListener {
-            exitSubCategory(false)
+            if (activeSubCategory == "DRAW" || activeSubCategory == "TEXT") {
+                exitSubCategory(false, preserveEditor = true)
+            } else {
+                exitSubCategory(false)
+            }
         }
 
         binding.btnEditSubConfirm.setOnClickListener {
@@ -276,28 +307,14 @@ class PhotoViewerActivity : AppCompatActivity() {
                 // Trigger crop async
                 binding.cropImageView.croppedImageAsync()
             } else if (activeSubCategory == "DRAW" || activeSubCategory == "TEXT") {
-                // Bake PhotoEditor layers into currentBitmap
-                lifecycleScope.launch {
-                    try {
-                        val fullBitmap = mPhotoEditor.saveAsBitmap()
-                        if (fullBitmap != null) {
-                            currentBitmap = fullBitmap
-                            exitSubCategory(true)
-                        } else {
-                            showToast("Failed to apply edits")
-                            exitSubCategory(false)
-                        }
-                    } catch (e: Exception) {
-                        showToast("Error: ${e.message}")
-                        exitSubCategory(false)
-                    }
-                }
+                hasUnsavedChanges = true
+                exitSubCategory(true, preserveEditor = true)
             } else if (activeSubCategory == "ADJUST") {
                 if (adjustedBitmap != null) {
                     currentBitmap = adjustedBitmap
-                    exitSubCategory(true)
+                    exitSubCategory(true, preserveEditor = true)
                 } else {
-                    exitSubCategory(false)
+                    exitSubCategory(false, preserveEditor = true)
                 }
             }
         }
@@ -433,10 +450,10 @@ class PhotoViewerActivity : AppCompatActivity() {
 
     private fun setupEditCategories() {
         binding.btnEditCategoryCrop.setOnClickListener {
-            enterSubCategory("CROP")
+            bakeAndEnterSubCategory("CROP")
         }
         binding.btnEditCategoryRotate.setOnClickListener {
-            enterSubCategory("ROTATE")
+            bakeAndEnterSubCategory("ROTATE")
         }
         binding.btnEditCategoryDraw.setOnClickListener {
             enterSubCategory("DRAW")
@@ -445,7 +462,21 @@ class PhotoViewerActivity : AppCompatActivity() {
             enterSubCategory("TEXT")
         }
         binding.btnEditCategoryAdjust.setOnClickListener {
-            enterSubCategory("ADJUST")
+            bakeAndEnterSubCategory("ADJUST")
+        }
+    }
+
+    private fun bakeAndEnterSubCategory(category: String) {
+        lifecycleScope.launch {
+            try {
+                val fullBitmap = mPhotoEditor.saveAsBitmap()
+                if (fullBitmap != null) {
+                    currentBitmap = fullBitmap
+                    binding.editMainImageView.source.setImageBitmap(currentBitmap)
+                    try { mPhotoEditor.clearAllViews() } catch (_: Exception) {}
+                }
+            } catch (e: Exception) {}
+            enterSubCategory(category)
         }
     }
 
@@ -468,7 +499,7 @@ class PhotoViewerActivity : AppCompatActivity() {
             } else {
                 binding.editBottomBarRotate.visibility = View.VISIBLE
                 binding.cropImageView.isShowCropOverlay = false
-                binding.seekBarRotate.progress = 45
+                binding.seekBarRotate.progress = 180
                 binding.tvRotateDegree.text = "0°"
             }
         } else if (category == "DRAW" || category == "TEXT") {
@@ -534,7 +565,7 @@ class PhotoViewerActivity : AppCompatActivity() {
         }
     }
 
-    private fun exitSubCategory(saveChanges: Boolean) {
+    private fun exitSubCategory(saveChanges: Boolean, preserveEditor: Boolean = false) {
         if (isTextInputActive) {
             closeTextInput(save = saveChanges)
         }
@@ -552,17 +583,21 @@ class PhotoViewerActivity : AppCompatActivity() {
         binding.editMainImageView.visibility = View.VISIBLE
         
         // Reset editor to fill available space on main edit screen
-        resetEditorSize()
+        resizeEditorToFitImage()
         
         try { mPhotoEditor.setBrushDrawingMode(false) } catch (_: Exception) {}
         
         if (saveChanges && currentBitmap != null) {
             hasUnsavedChanges = true
             binding.editMainImageView.source.setImageBitmap(currentBitmap)
-            try { mPhotoEditor.clearAllViews() } catch (_: Exception) {}
+            if (!preserveEditor) {
+                try { mPhotoEditor.clearAllViews() } catch (_: Exception) {}
+            }
         } else {
             // Discarding changes
-            try { mPhotoEditor.clearAllViews() } catch (_: Exception) {}
+            if (!preserveEditor) {
+                try { mPhotoEditor.clearAllViews() } catch (_: Exception) {}
+            }
             currentBitmap?.let { binding.editMainImageView.source.setImageBitmap(it) }
         }
         
@@ -603,7 +638,7 @@ class PhotoViewerActivity : AppCompatActivity() {
         binding.seekBarRotate.setOnSeekBarChangeListener(object : android.widget.SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: android.widget.SeekBar?, progress: Int, fromUser: Boolean) {
                 if (fromUser) {
-                    val degrees = progress - 45
+                    val degrees = progress - 180
                     binding.cropImageView.rotatedDegrees = degrees
                     binding.tvRotateDegree.text = "${degrees}°"
                 }
@@ -614,10 +649,48 @@ class PhotoViewerActivity : AppCompatActivity() {
         
         binding.cropImageView.setOnCropImageCompleteListener { _, result ->
             if (result.isSuccessful && result.bitmap != null) {
-                currentBitmap = result.bitmap
+                var finalBitmap = result.bitmap!!
+                val degrees = binding.cropImageView.rotatedDegrees
+                
+                // If the user rotated to an arbitrary angle and didn't manually crop, auto-crop the black corners
+                if (degrees % 90 != 0 && currentBitmap != null) {
+                    val w = currentBitmap!!.width.toDouble()
+                    val h = currentBitmap!!.height.toDouble()
+                    val rad = Math.toRadians(degrees.toDouble())
+                    val cos = Math.abs(Math.cos(rad))
+                    val sin = Math.abs(Math.sin(rad))
+                    
+                    val boundingW = w * cos + h * sin
+                    val boundingH = w * sin + h * cos
+                    
+                    val resultW = finalBitmap.width.toDouble()
+                    val resultH = finalBitmap.height.toDouble()
+                    
+                    val ratioW = resultW / boundingW
+                    val ratioH = resultH / boundingH
+                    
+                    // If the resulting bitmap is roughly the size of the full bounding box (meaning untouched crop window)
+                    if (Math.abs(ratioW - ratioH) < 0.05 && ratioW > 0.5) {
+                        val aspect = if (w > h) w / h else h / w
+                        val scale = 1.0 / (cos + aspect * sin)
+                        
+                        val cropW = (w * scale * ratioW).toInt()
+                        val cropH = (h * scale * ratioH).toInt()
+                        
+                        val left = ((resultW - cropW) / 2.0).toInt()
+                        val top = ((resultH - cropH) / 2.0).toInt()
+                        
+                        if (cropW > 0 && cropH > 0 && left >= 0 && top >= 0 && left + cropW <= finalBitmap.width && top + cropH <= finalBitmap.height) {
+                            finalBitmap = android.graphics.Bitmap.createBitmap(finalBitmap, left, top, cropW, cropH)
+                        }
+                    }
+                }
+                
+                currentBitmap = finalBitmap
                 exitSubCategory(true)
             } else {
-                showToast("Crop failed.")
+                showToast("Crop failed: ${result.error?.message}")
+                android.util.Log.e("PhotoViewerActivity", "Crop failed", result.error)
                 exitSubCategory(false)
             }
         }
@@ -1553,6 +1626,19 @@ class PhotoViewerActivity : AppCompatActivity() {
                             null
                         )
                     }
+
+                    // Create new FileEntry and add to adapter
+                    val newRelativePath = newFile.absolutePath.replace(Environment.getExternalStorageDirectory().absolutePath + "/", "")
+                    val newEntry = com.sk.gallery.model.FileEntry(
+                        hashId = java.util.UUID.randomUUID().toString(),
+                        relativePath = newRelativePath,
+                        fileName = newFileName,
+                        mimeType = "image/jpeg",
+                        sizeBytes = newFile.length(),
+                        sha256Checksum = "",
+                        dateModified = System.currentTimeMillis()
+                    )
+                    photoList.add(currentIndex + 1, newEntry)
                 }
                 
                 launch(kotlinx.coroutines.Dispatchers.Main) {
@@ -1568,6 +1654,9 @@ class PhotoViewerActivity : AppCompatActivity() {
                             null, null
                         )
                         adapter?.notifyItemChanged(currentIndex)
+                    } else {
+                        adapter?.notifyItemInserted(currentIndex + 1)
+                        binding.viewerViewPager.setCurrentItem(currentIndex + 1, true)
                     }
                 }
             } catch (e: Exception) {
@@ -1812,10 +1901,29 @@ class PhotoViewerActivity : AppCompatActivity() {
 
                 val scaleGestureDetector = android.view.ScaleGestureDetector(this@PhotoViewerActivity, object : android.view.ScaleGestureDetector.SimpleOnScaleGestureListener() {
                     override fun onScale(detector: android.view.ScaleGestureDetector): Boolean {
-                        scaleFactor *= detector.scaleFactor
-                        scaleFactor = Math.max(1.0f, Math.min(scaleFactor, 5.0f))
+                        val S = detector.scaleFactor
+                        val W = itemBinding.mediaWrapper.width.toFloat()
+                        val H = itemBinding.mediaWrapper.height.toFloat()
+
+                        var newScale = scaleFactor * S
+                        newScale = Math.max(1.0f, Math.min(newScale, 5.0f))
+
+                        val actualS = newScale / scaleFactor
+                        
+                        dx = (detector.focusX - W / 2f) * (1 - actualS) + actualS * dx
+                        dy = (detector.focusY - H / 2f) * (1 - actualS) + actualS * dy
+                        scaleFactor = newScale
+
+                        val maxDx = (W * (scaleFactor - 1)) / 2f
+                        val maxDy = (H * (scaleFactor - 1)) / 2f
+                        dx = Math.max(-maxDx, Math.min(dx, maxDx))
+                        dy = Math.max(-maxDy, Math.min(dy, maxDy))
+
                         itemBinding.mediaWrapper.scaleX = scaleFactor
                         itemBinding.mediaWrapper.scaleY = scaleFactor
+                        itemBinding.mediaWrapper.translationX = dx
+                        itemBinding.mediaWrapper.translationY = dy
+                        
                         binding.viewerViewPager.isUserInputEnabled = scaleFactor <= 1.0f
                         return true
                     }

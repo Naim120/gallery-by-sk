@@ -13,6 +13,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
@@ -29,6 +30,7 @@ import com.sk.gallery.data.local.AppPreferences
 import com.sk.gallery.databinding.FragmentPhotosBinding
 import com.sk.gallery.model.FileEntry
 import com.sk.gallery.ui.adapter.TimelineAdapter
+import com.sk.gallery.ui.collage.CollageActivity
 import com.sk.gallery.ui.viewer.PhotoViewerActivity
 import com.sk.gallery.util.PermissionManager
 import com.sk.gallery.util.applySort
@@ -306,6 +308,40 @@ class PhotosFragment : Fragment() {
                 startActivity(Intent.createChooser(shareIntent, "Share Selected Media"))
             }
         }
+
+        binding.btnActionCollage.setOnClickListener {
+            val selected = adapter.selectedEntries.toList()
+            
+            // Filter to only valid local images
+            val validImages = selected.filter { 
+                it.mimeType.startsWith("image/")
+            }
+
+            if (validImages.size !in 2..5) {
+                Toast.makeText(requireContext(), "Please select 2 to 5 local images for collage", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            val uris = ArrayList<Uri>()
+            for (entry in validImages) {
+                val file = File(Environment.getExternalStorageDirectory(), entry.relativePath)
+                if (file.exists()) {
+                    val uri = FileProvider.getUriForFile(requireContext(), "${requireContext().packageName}.fileprovider", file)
+                    uris.add(uri)
+                }
+            }
+
+            if (uris.isNotEmpty()) {
+                val intent = Intent(requireContext(), CollageActivity::class.java).apply {
+                    putParcelableArrayListExtra("extra_uris", uris)
+                }
+                startActivity(intent)
+                adapter.clearSelectionMode()
+                updateSelectionUI()
+            } else {
+                Toast.makeText(requireContext(), "Failed to locate files on device.", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     private fun deleteMediaEntries(entries: List<FileEntry>) {
@@ -340,6 +376,14 @@ class PhotosFragment : Fragment() {
             binding.ivActionFavourite.setColorFilter(favColor)
             binding.tvActionFavourite.text = if (allFav) "Favourited" else "Favourite"
             binding.tvActionFavourite.setTextColor(favColor)
+            
+            // Collage option logic (only 2-5 photos)
+            val selectedCount = adapter.selectedEntries.size
+            if (selectedCount in 2..5) {
+                binding.btnActionCollage.visibility = View.VISIBLE
+            } else {
+                binding.btnActionCollage.visibility = View.GONE
+            }
         } else {
             binding.selectionTopBar.visibility = View.GONE
             binding.selectionBottomBar.visibility = View.GONE

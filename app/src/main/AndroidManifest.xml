@@ -115,6 +115,12 @@
             android:foregroundServiceType="dataSync"
             tools:node="merge" />
 
+        <activity
+            android:name=".ui.collage.CollageActivity"
+            android:theme="@style/Theme.GalleryBySK"
+            android:screenOrientation="portrait"
+            android:exported="false" />
+
     </application>
 
 </manifest>

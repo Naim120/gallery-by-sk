@@ -257,13 +257,11 @@
 
     <!-- ================= EDIT MODE VIEWS ================= -->
     <!-- Edit Top Action Bar (Main: Cancel / Save) -->
-    <LinearLayout
+    <RelativeLayout
         android:id="@+id/edit_top_bar_main"
         android:layout_width="match_parent"
         android:layout_height="60dp"
         android:background="#90000000"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
         android:paddingHorizontal="16dp"
         android:visibility="gone"
         app:layout_constraintTop_toTopOf="parent">
@@ -272,23 +270,47 @@
             android:id="@+id/btn_edit_main_cancel"
             android:layout_width="40dp"
             android:layout_height="40dp"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_close"
             app:tint="#FFFFFF" />
 
-        <Space
-            android:layout_width="0dp"
+        <LinearLayout
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1" />
+            android:layout_centerInParent="true"
+            android:orientation="horizontal">
+            
+            <ImageButton
+                android:id="@+id/btn_edit_main_undo"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:padding="12dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_undo"
+                app:tint="#FFFFFF" />
+                
+            <ImageButton
+                android:id="@+id/btn_edit_main_redo"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:padding="12dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_redo"
+                app:tint="#FFFFFF" />
+        </LinearLayout>
 
         <Button
             android:id="@+id/btn_edit_main_save"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
             android:text="Save"
             android:textColor="#FFFFFF"
             style="@style/Widget.AppCompat.Button.Borderless" />
-    </LinearLayout>
+    </RelativeLayout>
 
     <!-- Edit Top Sub-Function Bar -->
     <RelativeLayout
@@ -532,8 +554,11 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:max="90"
-                android:progress="45" />
+                android:max="360"
+                android:progress="180"
+                android:progressTint="#FFFFFF"
+                android:thumbTint="#FFFFFF"
+                android:progressBackgroundTint="#88FFFFFF" />
                 
             <TextView
                 android:id="@+id/tv_rotate_degree"
