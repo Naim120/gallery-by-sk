@@ -77,8 +77,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateTabSelection(position: Int) {
-        val activeTextColor = androidx.core.content.ContextCompat.getColor(this, R.color.bg_primary)
-        val inactiveTextColor = androidx.core.content.ContextCompat.getColor(this, R.color.text_secondary)
+        val activeTextColor = androidx.core.content.ContextCompat.getColor(this, R.color.nav_tab_active_text)
+        val inactiveTextColor = androidx.core.content.ContextCompat.getColor(this, R.color.nav_tab_inactive_text)
 
         binding.tabPhotos.apply {
             setBackgroundResource(if (position == 0) R.drawable.bg_tab_active else android.R.color.transparent)

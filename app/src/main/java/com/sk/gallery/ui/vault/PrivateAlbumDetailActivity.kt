@@ -2,6 +2,8 @@ package com.sk.gallery.ui.vault
 
 import android.content.Intent
 import android.os.Bundle
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -90,7 +92,7 @@ class PrivateAlbumDetailActivity : AppCompatActivity() {
                     
                     binding.btnActionShare.visibility = View.GONE
                     binding.btnActionFavourite.visibility = View.GONE
-                    binding.btnActionDelete.visibility = View.GONE
+                    binding.btnActionDelete.visibility = View.VISIBLE
                     
                     val tvPrivate = binding.btnActionPrivate.getChildAt(1) as android.widget.TextView
                     tvPrivate.text = "Set Public"
@@ -110,6 +112,59 @@ class PrivateAlbumDetailActivity : AppCompatActivity() {
                 }
             }
         )
+
+        binding.btnActionDelete.setOnClickListener {
+            val selected = adapter.selectedEntries.toList()
+            if (selected.isEmpty()) return@setOnClickListener
+
+            androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("Permanently Delete?")
+                .setMessage("Are you sure you want to permanently delete these ${selected.size} files? This action cannot be undone and the files will not be moved to Recently Deleted.")
+                .setPositiveButton("Delete") { _, _ ->
+                    val totalItems = selected.size
+                    val totalBytes = selected.sumOf { it.sizeBytes }
+                    val showProgress = totalItems > 10 || totalBytes > 50 * 1024 * 1024
+                    
+                    if (showProgress) {
+                        val progressDialog = android.app.AlertDialog.Builder(this)
+                            .setTitle("Deleting Permanently")
+                            .setMessage("Deleting 1 of $totalItems...")
+                            .setCancelable(false)
+                            .create()
+                        progressDialog.show()
+                        
+                        lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                            var deletedCount = 0
+                            selected.forEachIndexed { index, entry ->
+                                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                                    progressDialog.setMessage("Deleting ${index + 1} of $totalItems...")
+                                }
+                                if (PrivateVaultManager.deleteFromVault(this@PrivateAlbumDetailActivity, entry.hashId)) {
+                                    deletedCount++
+                                }
+                            }
+                            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                                progressDialog.dismiss()
+                                Toast.makeText(this@PrivateAlbumDetailActivity, "Permanently deleted $deletedCount items", Toast.LENGTH_SHORT).show()
+                                adapter.clearSelectionMode()
+                                onResume()
+                            }
+                        }
+                    } else {
+                        var deletedCount = 0
+                        selected.forEach { entry ->
+                            if (PrivateVaultManager.deleteFromVault(this@PrivateAlbumDetailActivity, entry.hashId)) {
+                                deletedCount++
+                            }
+                        }
+                        Toast.makeText(this, "Permanently deleted $deletedCount items", Toast.LENGTH_SHORT).show()
+                        adapter.clearSelectionMode()
+                        onResume()
+                    }
+                }
+                .setNegativeButton("Cancel", null)
+                .show()
+        }
 
         binding.btnActionPrivate.setOnClickListener {
             val selected = adapter.selectedEntries.toList()

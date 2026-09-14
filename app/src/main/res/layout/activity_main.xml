@@ -67,7 +67,7 @@
             android:layout_height="40dp"
             android:gravity="center"
             android:text="Photos"
-            android:textColor="@color/bg_primary"
+            android:textColor="@color/nav_tab_active_text"
             android:textSize="14sp"
             android:background="@drawable/bg_tab_active" />
 
@@ -77,7 +77,7 @@
             android:layout_height="40dp"
             android:gravity="center"
             android:text="Albums"
-            android:textColor="@color/text_secondary"
+            android:textColor="@color/nav_tab_inactive_text"
             android:textSize="14sp"
             android:background="@android:color/transparent" />
 
@@ -87,7 +87,7 @@
             android:layout_height="40dp"
             android:gravity="center"
             android:text="Cloud"
-            android:textColor="@color/text_secondary"
+            android:textColor="@color/nav_tab_inactive_text"
             android:textSize="14sp"
             android:background="@android:color/transparent" />
 

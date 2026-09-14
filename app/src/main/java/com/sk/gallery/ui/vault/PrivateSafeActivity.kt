@@ -2,6 +2,8 @@ package com.sk.gallery.ui.vault
 
 import android.content.Intent
 import android.os.Bundle
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -218,17 +220,51 @@ class VaultTimelineFragment : Fragment(), VaultRefreshable {
                 .setTitle("Permanently Delete?")
                 .setMessage("Are you sure you want to permanently delete these ${selected.size} files? This action cannot be undone and the files will not be moved to Recently Deleted.")
                 .setPositiveButton("Delete") { _, _ ->
-                    var deletedCount = 0
-                    selected.forEach { entry ->
-                        if (com.sk.gallery.data.PrivateVaultManager.deleteFromVault(requireContext(), entry.hashId)) {
-                            deletedCount++
+                    val totalItems = selected.size
+                    val totalBytes = selected.sumOf { it.sizeBytes }
+                    val showProgress = totalItems > 10 || totalBytes > 50 * 1024 * 1024
+                    
+                    if (showProgress) {
+                        val progressDialog = android.app.AlertDialog.Builder(requireContext())
+                            .setTitle("Deleting Permanently")
+                            .setMessage("Deleting 1 of $totalItems...")
+                            .setCancelable(false)
+                            .create()
+                        progressDialog.show()
+                        
+                        viewLifecycleOwner.lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                            var deletedCount = 0
+                            selected.forEachIndexed { index, entry ->
+                                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                                    progressDialog.setMessage("Deleting ${index + 1} of $totalItems...")
+                                }
+                                if (com.sk.gallery.data.PrivateVaultManager.deleteFromVault(requireContext(), entry.hashId)) {
+                                    deletedCount++
+                                }
+                            }
+                            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                                progressDialog.dismiss()
+                                android.widget.Toast.makeText(requireContext(), "Permanently deleted $deletedCount items", android.widget.Toast.LENGTH_SHORT).show()
+                                adapter.clearSelectionMode()
+                                (activity as? PrivateSafeActivity)?.let {
+                                    PrivateSafeActivity.vaultEntries = com.sk.gallery.data.PrivateVaultManager.getVaultEntries(it)
+                                    it.supportFragmentManager.fragments.forEach { f -> (f as? VaultRefreshable)?.refreshVaultData() }
+                                }
+                            }
                         }
-                    }
-                    android.widget.Toast.makeText(requireContext(), "Permanently deleted $deletedCount items", android.widget.Toast.LENGTH_SHORT).show()
-                    adapter.clearSelectionMode()
-                    (activity as? PrivateSafeActivity)?.let {
-                        PrivateSafeActivity.vaultEntries = com.sk.gallery.data.PrivateVaultManager.getVaultEntries(it)
-                        it.supportFragmentManager.fragments.forEach { f -> (f as? VaultRefreshable)?.refreshVaultData() }
+                    } else {
+                        var deletedCount = 0
+                        selected.forEach { entry ->
+                            if (com.sk.gallery.data.PrivateVaultManager.deleteFromVault(requireContext(), entry.hashId)) {
+                                deletedCount++
+                            }
+                        }
+                        android.widget.Toast.makeText(requireContext(), "Permanently deleted $deletedCount items", android.widget.Toast.LENGTH_SHORT).show()
+                        adapter.clearSelectionMode()
+                        (activity as? PrivateSafeActivity)?.let {
+                            PrivateSafeActivity.vaultEntries = com.sk.gallery.data.PrivateVaultManager.getVaultEntries(it)
+                            it.supportFragmentManager.fragments.forEach { f -> (f as? VaultRefreshable)?.refreshVaultData() }
+                        }
                     }
                 }
                 .setNegativeButton("Cancel", null)

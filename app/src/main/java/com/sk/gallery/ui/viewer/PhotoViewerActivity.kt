@@ -1737,9 +1737,6 @@ class PhotoViewerActivity : AppCompatActivity() {
 
             fun pauseVideo() {
                 exoPlayer?.pause()
-                isVideoPlaying = false
-                updateVideoUIState()
-                handler.removeCallbacksAndMessages(null)
             }
             
             fun releasePlayer() {
@@ -1866,9 +1863,6 @@ class PhotoViewerActivity : AppCompatActivity() {
                                 pauseVideo()
                             } else {
                                 player.play()
-                                isVideoPlaying = true
-                                updateVideoUIState()
-                                startProgressUpdater()
                             }
                         }
                     }
@@ -2071,11 +2065,23 @@ class PhotoViewerActivity : AppCompatActivity() {
             
             private fun setupVideoListeners() {
                 exoPlayer?.addListener(object : androidx.media3.common.Player.Listener {
+                    override fun onIsPlayingChanged(isPlaying: Boolean) {
+                        if (isPlaying) {
+                            isVideoPlaying = true
+                            updateVideoUIState()
+                            startProgressUpdater()
+                        } else {
+                            isVideoPlaying = false
+                            updateVideoUIState()
+                            updateProgressRunnable?.let { handler.removeCallbacks(it) }
+                        }
+                    }
+
                     override fun onPlaybackStateChanged(playbackState: Int) {
                         if (playbackState == androidx.media3.common.Player.STATE_READY) {
                             itemBinding.seekBarVideo.max = exoPlayer?.duration?.toInt() ?: 0
                             val dur = exoPlayer?.duration ?: 0L
-                            itemBinding.tvVideoTime.text = "00:00 / ${com.sk.gallery.util.FileUtils.formatDuration(dur)}"
+                            itemBinding.tvVideoTime.text = "${com.sk.gallery.util.FileUtils.formatDuration(exoPlayer?.currentPosition ?: 0L)} / ${com.sk.gallery.util.FileUtils.formatDuration(dur)}"
                             // We don't auto-seek to 1 for ExoPlayer since it renders the first frame automatically
                         } else if (playbackState == androidx.media3.common.Player.STATE_ENDED) {
                             exoPlayer?.seekTo(0)
@@ -2101,20 +2107,19 @@ class PhotoViewerActivity : AppCompatActivity() {
             }
 
             private fun startProgressUpdater() {
+                updateProgressRunnable?.let { handler.removeCallbacks(it) }
                 updateProgressRunnable = object : Runnable {
                     override fun run() {
                         val player = exoPlayer ?: return
-                        if (player.isPlaying) {
-                            val currentPos = player.currentPosition.toInt()
-                            val duration = player.duration.toInt()
-                            
-                            if (duration > 0) {
-                                itemBinding.seekBarVideo.max = duration
-                                itemBinding.seekBarVideo.progress = currentPos
-                                itemBinding.tvVideoTime.text = "${com.sk.gallery.util.FileUtils.formatDuration(currentPos.toLong())} / ${com.sk.gallery.util.FileUtils.formatDuration(duration.toLong())}"
-                            }
-                            handler.postDelayed(this, 100)
+                        val currentPos = player.currentPosition.toInt()
+                        val duration = player.duration.toInt()
+                        
+                        if (duration > 0) {
+                            itemBinding.seekBarVideo.max = duration
+                            itemBinding.seekBarVideo.progress = currentPos
+                            itemBinding.tvVideoTime.text = "${com.sk.gallery.util.FileUtils.formatDuration(currentPos.toLong())} / ${com.sk.gallery.util.FileUtils.formatDuration(duration.toLong())}"
                         }
+                        handler.postDelayed(this, 100)
                     }
                 }
                 handler.post(updateProgressRunnable!!)

@@ -159,7 +159,7 @@ class MediaRepository(private val context: Context) {
                 repositoryScope.launch {
                     isScanning = true
                     try {
-                        val freshManifest = scanner.scanMediaStore()
+                        val freshManifest = scanner.scanMediaStore(saveToDisk = false)
                         _manifestFlow.value = freshManifest
                         _mediaFlow.value = freshManifest.entries.values.toList()
                         Log.d(TAG, "MediaRepository: ContentObserver scan complete")

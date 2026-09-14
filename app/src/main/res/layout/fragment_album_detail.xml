@@ -29,9 +29,9 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_marginStart="12dp"
+            android:gravity="center"
             android:textColor="@color/text_primary"
-            android:textSize="20sp"
+            android:textSize="22sp"
             android:textStyle="bold"
             android:text="Album" />
 
@@ -60,7 +60,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:clipToPadding="false"
-            android:padding="6dp"
+            android:padding="1dp"
             android:paddingBottom="90dp"
             android:scrollbars="vertical"
             android:scrollbarStyle="outsideOverlay"
@@ -110,7 +110,7 @@
         android:id="@+id/selection_top_bar"
         android:layout_width="match_parent"
         android:layout_height="60dp"
-        android:background="#E01E2230"
+        android:background="@color/bg_primary"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingHorizontal="16dp"
@@ -123,7 +123,7 @@
             android:layout_height="40dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_close"
-            app:tint="#FFFFFF" />
+            app:tint="@color/text_primary" />
 
         <TextView
             android:id="@+id/tv_selection_count"
@@ -132,7 +132,7 @@
             android:layout_weight="1"
             android:layout_marginStart="16dp"
             android:text="0 selected"
-            android:textColor="#FFFFFF"
+            android:textColor="@color/text_primary"
             android:textSize="16sp"
             android:textStyle="bold" />
 
@@ -152,7 +152,7 @@
         android:id="@+id/selection_bottom_bar"
         android:layout_width="match_parent"
         android:layout_height="64dp"
-        android:background="#F0151821"
+        android:background="@color/bg_primary"
         android:elevation="12dp"
         android:gravity="center"
         android:orientation="horizontal"
@@ -171,13 +171,13 @@
                 android:layout_width="22dp"
                 android:layout_height="22dp"
                 android:src="@drawable/ic_private"
-                app:tint="#FFFFFF" />
+                app:tint="@color/text_primary" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Private"
-                android:textColor="#FFFFFF"
+                android:textColor="@color/text_primary"
                 android:textSize="11sp" />
         </LinearLayout>
 
@@ -194,14 +194,14 @@
                 android:layout_width="22dp"
                 android:layout_height="22dp"
                 android:src="@drawable/ic_favourite"
-                app:tint="#FFFFFF" />
+                app:tint="@color/text_primary" />
 
             <TextView
                 android:id="@+id/tv_action_favourite"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Favourite"
-                android:textColor="#FFFFFF"
+                android:textColor="@color/text_primary"
                 android:textSize="11sp" />
         </LinearLayout>
 
@@ -239,13 +239,13 @@
                 android:layout_width="22dp"
                 android:layout_height="22dp"
                 android:src="@drawable/ic_move"
-                app:tint="#FFFFFF" />
+                app:tint="@color/text_primary" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Move"
-                android:textColor="#FFFFFF"
+                android:textColor="@color/text_primary"
                 android:textSize="11sp" />
         </LinearLayout>
 
@@ -261,13 +261,13 @@
                 android:layout_width="22dp"
                 android:layout_height="22dp"
                 android:src="@drawable/ic_share"
-                app:tint="#FFFFFF" />
+                app:tint="@color/text_primary" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Share"
-                android:textColor="#FFFFFF"
+                android:textColor="@color/text_primary"
                 android:textSize="11sp" />
         </LinearLayout>
 
@@ -284,13 +284,13 @@
                 android:layout_width="22dp"
                 android:layout_height="22dp"
                 android:src="@drawable/ic_collage"
-                app:tint="#FFFFFF" />
+                app:tint="@color/text_primary" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Collage"
-                android:textColor="#FFFFFF"
+                android:textColor="@color/text_primary"
                 android:textSize="11sp" />
         </LinearLayout>
 

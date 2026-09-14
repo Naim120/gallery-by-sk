@@ -37,7 +37,7 @@ class MediaStoreScanner(private val context: Context) {
         return File(context.filesDir, manifestFileName)
     }
 
-    suspend fun scanMediaStore(): HierarchyIndex = withContext(Dispatchers.IO) {
+    suspend fun scanMediaStore(saveToDisk: Boolean = true): HierarchyIndex = withContext(Dispatchers.IO) {
         val startTime = System.currentTimeMillis()
         Log.d(TAG, "MediaStoreScanner: Starting scan of local media...")
 
@@ -96,7 +96,9 @@ class MediaStoreScanner(private val context: Context) {
         )
 
         // saveManifestLocally acquires the mutex itself
-        saveManifestLocally(hierarchyIndex)
+        if (saveToDisk) {
+            saveManifestLocally(hierarchyIndex)
+        }
         return@withContext hierarchyIndex
     }
 

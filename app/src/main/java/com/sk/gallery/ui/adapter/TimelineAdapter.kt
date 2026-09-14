@@ -109,7 +109,7 @@ class TimelineAdapter(
         onSelectionChanged(selectedEntries)
     }
 
-    fun toggleSelection(entry: FileEntry) {
+    fun toggleSelection(entry: FileEntry, position: Int = -1) {
         if (selectedEntries.contains(entry)) {
             selectedEntries.remove(entry)
         } else {
@@ -118,7 +118,12 @@ class TimelineAdapter(
         if (selectedEntries.isEmpty()) {
             isSelectionMode = false
         }
-        notifyDataSetChanged()
+        if (position != -1) {
+            notifyItemChanged(position)
+        } else {
+            val index = items.indexOfFirst { it is TimelineItem.Media && it.entry.hashId == entry.hashId }
+            if (index != -1) notifyItemChanged(index) else notifyDataSetChanged()
+        }
         onSelectionChanged(selectedEntries)
     }
 
@@ -183,6 +188,17 @@ class TimelineAdapter(
 
     override fun getItemCount(): Int = items.size
 
+    private var itemSize: Int = 0
+
+    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
+        super.onAttachedToRecyclerView(recyclerView)
+        val context = recyclerView.context
+        val displayMetrics = context.resources.displayMetrics
+        val horizontalPaddingPx = (32 * displayMetrics.density).toInt()
+        val availableWidth = displayMetrics.widthPixels - horizontalPaddingPx
+        itemSize = availableWidth / spanCount
+    }
+
     inner class HeaderViewHolder(private val binding: ItemDateHeaderBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
@@ -194,37 +210,47 @@ class TimelineAdapter(
 
     inner class MediaViewHolder(private val binding: ItemMediaBinding) :
         RecyclerView.ViewHolder(binding.root) {
+        
+        init {
+            if (itemSize > 0) {
+                val params = binding.ivThumbnail.layoutParams
+                params.width = itemSize
+                params.height = itemSize
+                binding.ivThumbnail.layoutParams = params
+            }
+        }
 
         fun bind(entry: FileEntry) {
             val context = binding.root.context
-            val displayMetrics = context.resources.displayMetrics
-            val horizontalPaddingPx = (32 * displayMetrics.density).toInt()
-            val availableWidth = displayMetrics.widthPixels - horizontalPaddingPx
-            val itemSize = availableWidth / spanCount
-
-            val params = binding.ivThumbnail.layoutParams
-            params.width = itemSize
-            params.height = itemSize
-            binding.ivThumbnail.layoutParams = params
-
+            
             val model = com.sk.gallery.util.MediaLoaderHelper.getGlideModel(entry)
-
+            
             Glide.with(context)
                 .load(model)
                 .signature(com.bumptech.glide.signature.ObjectKey(entry.dateModified))
                 .centerCrop()
+                .override(if (itemSize > 0) itemSize else 300, if (itemSize > 0) itemSize else 300)
                 .placeholder(R.color.surface_card)
                 .error(R.color.surface_card)
                 .into(binding.ivThumbnail)
 
             val isSelected = selectedEntries.contains(entry)
-            binding.vOverlay.visibility = if (isSelected) View.VISIBLE else View.GONE
+            
+            if (isSelected) {
+                binding.root.setBackgroundColor(androidx.core.content.ContextCompat.getColor(context, R.color.text_primary))
+                binding.ivThumbnail.animate().scaleX(0.9f).scaleY(0.9f).setDuration(200).start()
+            } else {
+                binding.root.setBackgroundColor(android.graphics.Color.TRANSPARENT)
+                binding.ivThumbnail.animate().scaleX(1.0f).scaleY(1.0f).setDuration(200).start()
+            }
+            
+            binding.vOverlay.visibility = View.GONE
             binding.ivCheck.visibility = if (isSelected) View.VISIBLE else View.GONE
             binding.ivCloudBadge.visibility = if (entry.cloudFileId != null) View.VISIBLE else View.GONE
 
             binding.root.setOnClickListener {
                 if (isSelectionMode) {
-                    toggleSelection(entry)
+                    toggleSelection(entry, bindingAdapterPosition)
                 } else {
                     val mediaIndex = allMediaEntries.indexOf(entry)
                     onItemClick(entry, if (mediaIndex >= 0) mediaIndex else 0)
@@ -236,7 +262,7 @@ class TimelineAdapter(
                     startSelectionMode(entry)
                     onItemLongClick(entry)
                 } else {
-                    toggleSelection(entry)
+                    toggleSelection(entry, bindingAdapterPosition)
                 }
                 true
             }

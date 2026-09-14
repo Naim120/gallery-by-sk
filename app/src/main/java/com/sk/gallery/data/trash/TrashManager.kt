@@ -26,12 +26,55 @@ object TrashManager {
     }
 
     suspend fun moveToTrash(context: Context, entries: List<FileEntry>, onComplete: () -> Unit) {
+        val totalItems = entries.size
+        val totalBytes = entries.sumOf { it.sizeBytes }
+        val showProgress = totalItems > 10 || totalBytes > 50 * 1024 * 1024
+
+        var progressDialog: android.app.AlertDialog? = null
+        var progressBar: android.widget.ProgressBar? = null
+        var tvProgress: android.widget.TextView? = null
+
+        if (showProgress) {
+            try {
+                withContext(Dispatchers.Main) {
+                    progressBar = android.widget.ProgressBar(context, null, android.R.attr.progressBarStyleHorizontal)
+                    progressBar!!.max = 100
+                    progressBar!!.progress = 0
+                    
+                    tvProgress = android.widget.TextView(context).apply {
+                        text = "Deleting 1 of $totalItems (0%)..."
+                        setPadding(16, 16, 16, 16)
+                    }
+                    
+                    val layout = android.widget.LinearLayout(context).apply {
+                        orientation = android.widget.LinearLayout.VERTICAL
+                        setPadding(48, 24, 48, 24)
+                        addView(tvProgress)
+                        addView(progressBar)
+                    }
+                    
+                    progressDialog = android.app.AlertDialog.Builder(context)
+                        .setTitle("Moving to Trash")
+                        .setView(layout)
+                        .setCancelable(false)
+                        .create()
+                        
+                    progressDialog!!.show()
+                }
+            } catch (e: Exception) {
+                // Fallback if context is not valid for dialog
+            }
+        }
+
         withContext(Dispatchers.IO) {
             val trashDir = getTrashDir(context)
             val dao = AppDatabase.getDatabase(context).trashDao()
             val successfulEntries = mutableListOf<FileEntry>()
+            
+            var processedBytes = 0L
+            var lastUpdate = 0L
 
-            for (entry in entries) {
+            for ((index, entry) in entries.withIndex()) {
                 val originalFile = File(Environment.getExternalStorageDirectory(), entry.relativePath)
                 if (!originalFile.exists()) continue
 
@@ -41,7 +84,32 @@ object TrashManager {
 
                 try {
                     val originalLastModified = originalFile.lastModified()
-                    originalFile.copyTo(destFile, overwrite = true)
+                    
+                    if (showProgress) {
+                        originalFile.inputStream().use { input ->
+                            destFile.outputStream().use { output ->
+                                val buffer = ByteArray(8192)
+                                var bytesRead: Int
+                                while (input.read(buffer).also { bytesRead = it } >= 0) {
+                                    output.write(buffer, 0, bytesRead)
+                                    processedBytes += bytesRead
+                                    
+                                    val now = System.currentTimeMillis()
+                                    if (now - lastUpdate > 100) {
+                                        lastUpdate = now
+                                        val progressPercent = if (totalBytes > 0) ((processedBytes.toDouble() / totalBytes.toDouble()) * 100).toInt() else 0
+                                        withContext(Dispatchers.Main) {
+                                            progressBar?.progress = progressPercent
+                                            tvProgress?.text = "Deleting ${index + 1} of $totalItems ($progressPercent%)..."
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        originalFile.copyTo(destFile, overwrite = true)
+                    }
+                    
                     destFile.setLastModified(originalLastModified)
                     
                     // Remove from MediaStore
@@ -102,6 +170,7 @@ object TrashManager {
             }
 
             withContext(Dispatchers.Main) {
+                progressDialog?.dismiss()
                 MediaRepository.getInstance(context).removeEntriesInstantly(successfulEntries)
                 onComplete()
             }
@@ -154,11 +223,43 @@ object TrashManager {
     }
 
     suspend fun permanentlyDelete(context: Context, trashEntries: List<TrashEntry>, onComplete: () -> Unit) {
+        val totalItems = trashEntries.size
+        val totalBytes = trashEntries.sumOf { it.sizeBytes }
+        val showProgress = totalItems > 10 || totalBytes > 50 * 1024 * 1024
+
+        var progressDialog: android.app.AlertDialog? = null
+        var tvProgress: android.widget.TextView? = null
+
+        if (showProgress) {
+            try {
+                withContext(Dispatchers.Main) {
+                    tvProgress = android.widget.TextView(context).apply {
+                        text = "Deleting 1 of $totalItems..."
+                        setPadding(48, 48, 48, 48)
+                    }
+                    
+                    progressDialog = android.app.AlertDialog.Builder(context)
+                        .setTitle("Deleting Permanently")
+                        .setView(tvProgress)
+                        .setCancelable(false)
+                        .create()
+                        
+                    progressDialog!!.show()
+                }
+            } catch (e: Exception) {}
+        }
+
         withContext(Dispatchers.IO) {
             val trashDir = getTrashDir(context)
             val dao = AppDatabase.getDatabase(context).trashDao()
 
-            for (trashEntry in trashEntries) {
+            for ((index, trashEntry) in trashEntries.withIndex()) {
+                if (showProgress) {
+                    withContext(Dispatchers.Main) {
+                        tvProgress?.text = "Deleting ${index + 1} of $totalItems..."
+                    }
+                }
+                
                 val trashFile = File(trashDir, trashEntry.trashFileName)
                 if (trashFile.exists()) {
                     trashFile.delete()
@@ -167,6 +268,7 @@ object TrashManager {
             }
 
             withContext(Dispatchers.Main) {
+                progressDialog?.dismiss()
                 onComplete()
             }
         }
