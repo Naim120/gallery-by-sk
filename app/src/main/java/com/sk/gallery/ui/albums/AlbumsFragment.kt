@@ -125,9 +125,10 @@ class AlbumsFragment : Fragment() {
             // Categorize folder groups
             val folderGroups = allMedia.groupBy { entry ->
                 val path = entry.relativePath
+                val albumPath = com.sk.gallery.util.FileUtils.getAlbumRelativePath(path)
                 when {
-                    path.contains("WhatsApp", ignoreCase = true) -> {
-                        if (path.contains("Documents", ignoreCase = true)) {
+                    albumPath.contains("WhatsApp", ignoreCase = true) -> {
+                        if (albumPath.contains("Documents", ignoreCase = true)) {
                             "WhatsApp Documents"
                         } else if (entry.mimeType.startsWith("video", ignoreCase = true)) {
                             "WhatsApp Videos"
@@ -135,11 +136,10 @@ class AlbumsFragment : Fragment() {
                             "WhatsApp Images"
                         }
                     }
-                    path.contains("Telegram", ignoreCase = true) -> "Telegram"
-                    path.contains("Instagram", ignoreCase = true) -> "Instagram"
-                    path.contains("ChatGPT", ignoreCase = true) -> "ChatGPT"
+                    albumPath.contains("Telegram", ignoreCase = true) -> "Telegram"
+                    albumPath.contains("Instagram", ignoreCase = true) -> "Instagram"
+                    albumPath.contains("ChatGPT", ignoreCase = true) -> "ChatGPT"
                     else -> {
-                        val albumPath = com.sk.gallery.util.FileUtils.getAlbumRelativePath(path)
                         val name = com.sk.gallery.util.FileUtils.extractFolderName(albumPath)
                         if (name.isNotBlank()) name else "Other"
                     }

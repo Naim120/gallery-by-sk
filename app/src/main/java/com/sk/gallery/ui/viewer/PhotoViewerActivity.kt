@@ -1713,6 +1713,10 @@ class PhotoViewerActivity : AppCompatActivity() {
         override fun onViewDetachedFromWindow(holder: PhotoViewHolder) {
             super.onViewDetachedFromWindow(holder)
             holder.pauseVideo()
+        }
+
+        override fun onViewRecycled(holder: PhotoViewHolder) {
+            super.onViewRecycled(holder)
             holder.releasePlayer()
         }
 
