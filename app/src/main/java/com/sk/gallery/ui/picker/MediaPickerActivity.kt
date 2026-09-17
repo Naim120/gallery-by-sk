@@ -144,6 +144,7 @@ class MediaPickerActivity : AppCompatActivity() {
             onChipSelected = { chip ->
                 selectedChipId = chip.id
                 filterCurrentMediaByChip(chip)
+                binding.rvPickerGrid.scrollToPosition(0)
             }
         )
         binding.rvFilterChips.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
@@ -234,29 +235,82 @@ class MediaPickerActivity : AppCompatActivity() {
         }
     }
 
+    private var albumGroups: Map<String, List<FileEntry>> = emptyMap()
+
     private fun updateFilterChips(mediaList: List<FileEntry>) {
-        val chips = mutableListOf<FilterChip>()
-        chips.add(FilterChip("all", "All Media"))
-
-        // Group by folder path
-        val folderGroups = mediaList.groupBy { FileUtils.getAlbumRelativePath(it.relativePath) }
         val aliases = com.sk.gallery.data.local.AppPreferences(this).getAlbumAliases()
+        val groups = mediaList.groupBy { getAlbumTitleForEntry(it, aliases) }
+        albumGroups = groups
 
-        for ((relPath, entries) in folderGroups) {
-            if (entries.isEmpty()) continue
-            val folderName = FileUtils.extractFolderName(entries.first().relativePath)
-            val displayTitle = aliases[relPath] ?: folderName
-            chips.add(FilterChip(id = relPath, name = "$displayTitle (${entries.size})", relativePath = relPath))
+        val chips = mutableListOf<FilterChip>()
+        chips.add(FilterChip("all", "All Media (${mediaList.size})"))
+
+        // Prioritize common albums
+        val priorityOrder = listOf(
+            "Camera",
+            "Screenshots",
+            "Downloads",
+            "WhatsApp Images",
+            "WhatsApp Videos",
+            "Instagram",
+            "Telegram",
+            "ChatGPT"
+        )
+
+        val sortedTitles = groups.keys.sortedWith(Comparator { a, b ->
+            val indexA = priorityOrder.indexOf(a)
+            val indexB = priorityOrder.indexOf(b)
+            when {
+                indexA >= 0 && indexB >= 0 -> indexA.compareTo(indexB)
+                indexA >= 0 -> -1
+                indexB >= 0 -> 1
+                else -> a.compareTo(b, ignoreCase = true)
+            }
+        })
+
+        for (title in sortedTitles) {
+            val count = groups[title]?.size ?: 0
+            chips.add(FilterChip(id = title, name = "$title ($count)"))
         }
 
         chipAdapter.setChips(chips, selectedChipId)
     }
 
+    private fun getAlbumTitleForEntry(entry: FileEntry, aliases: Map<String, String>): String {
+        val albumPath = FileUtils.getAlbumRelativePath(entry.relativePath)
+        val alias = aliases[albumPath]
+        if (!alias.isNullOrBlank()) {
+            return alias
+        }
+
+        return when {
+            albumPath.contains("Screenshots", ignoreCase = true) -> "Screenshots"
+            albumPath.contains("Camera", ignoreCase = true) -> "Camera"
+            albumPath.contains("WhatsApp", ignoreCase = true) -> {
+                if (albumPath.contains("Documents", ignoreCase = true)) {
+                    "WhatsApp Documents"
+                } else if (entry.mimeType.startsWith("video", ignoreCase = true)) {
+                    "WhatsApp Videos"
+                } else {
+                    "WhatsApp Images"
+                }
+            }
+            albumPath.contains("Telegram", ignoreCase = true) -> "Telegram"
+            albumPath.contains("Instagram", ignoreCase = true) -> "Instagram"
+            albumPath.contains("ChatGPT", ignoreCase = true) -> "ChatGPT"
+            albumPath.contains("Download", ignoreCase = true) -> "Downloads"
+            else -> {
+                val folder = FileUtils.extractFolderName(albumPath)
+                if (folder.isNotBlank()) folder else "Other"
+            }
+        }
+    }
+
     private fun filterCurrentMediaByChip(chip: FilterChip) {
-        currentDisplayedEntries = if (chip.id == "all" || chip.relativePath.isNullOrEmpty()) {
+        currentDisplayedEntries = if (chip.id == "all") {
             allFilteredEntries
         } else {
-            allFilteredEntries.filter { it.relativePath.startsWith(chip.relativePath, ignoreCase = true) }
+            albumGroups[chip.id] ?: emptyList()
         }
 
         mediaAdapter.updateEntries(currentDisplayedEntries)
