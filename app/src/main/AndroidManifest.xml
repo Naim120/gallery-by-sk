@@ -40,6 +40,36 @@
             </intent-filter>
         </activity>
 
+        <!-- System Media Picker for web browsers and external apps -->
+        <activity
+            android:name=".ui.picker.MediaPickerActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.GalleryBySK"
+            android:configChanges="orientation|screenSize|keyboardHidden">
+
+            <!-- Handles ACTION_GET_CONTENT (Web uploads, File Choosers) -->
+            <intent-filter>
+                <action android:name="android.intent.action.GET_CONTENT" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.OPENABLE" />
+                <data android:mimeType="image/*" />
+                <data android:mimeType="video/*" />
+                <data android:mimeType="*/*" />
+            </intent-filter>
+
+            <!-- Handles ACTION_PICK -->
+            <intent-filter>
+                <action android:name="android.intent.action.PICK" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.OPENABLE" />
+                <data android:mimeType="image/*" />
+                <data android:mimeType="video/*" />
+                <data android:mimeType="vnd.android.cursor.dir/image" />
+                <data android:mimeType="vnd.android.cursor.dir/video" />
+            </intent-filter>
+        </activity>
+
         <activity
             android:name=".ui.viewer.PhotoViewerActivity"
             android:exported="false"
