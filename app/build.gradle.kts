@@ -15,8 +15,8 @@ android {
         applicationId = "com.sk.gallery"
         minSdk = 26
         targetSdk = 34
-        versionCode = 9
-        versionName = "1.4.2"
+        versionCode = 10
+        versionName = "1.4.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         val secretsFile = rootProject.file("secrets.properties")
