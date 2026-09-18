@@ -10,6 +10,7 @@ import com.sk.gallery.data.local.AppPreferences
 import com.sk.gallery.model.FileEntry
 import com.sk.gallery.model.HierarchyIndex
 
+import com.sk.gallery.util.FileUtils
 import com.sk.gallery.util.applySort
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -204,15 +205,21 @@ class MediaRepository(private val context: Context) {
     }
 
     fun getCameraMedia(): List<FileEntry> {
-        return _mediaFlow.value.filter {
-            it.relativePath.contains("DCIM/Camera", ignoreCase = true) ||
-                    it.relativePath.contains("DCIM/", ignoreCase = true)
+        return _mediaFlow.value.filter { entry ->
+            val path = entry.relativePath.replace("\\", "/")
+            val albumPath = FileUtils.getAlbumRelativePath(path)
+            albumPath.equals("DCIM/Camera", ignoreCase = true) ||
+                    albumPath.equals("Camera", ignoreCase = true) ||
+                    albumPath.equals("DCIM/100ANDRO", ignoreCase = true) ||
+                    albumPath.equals("DCIM/100MEDIA", ignoreCase = true) ||
+                    (path.startsWith("DCIM/", ignoreCase = true) && !path.substringAfter("DCIM/").contains("/"))
         }
     }
 
     fun getScreenshots(): List<FileEntry> {
-        return _mediaFlow.value.filter {
-            it.relativePath.contains("Screenshots", ignoreCase = true)
+        return _mediaFlow.value.filter { entry ->
+            val albumPath = FileUtils.getAlbumRelativePath(entry.relativePath)
+            albumPath.contains("Screenshot", ignoreCase = true)
         }
     }
 

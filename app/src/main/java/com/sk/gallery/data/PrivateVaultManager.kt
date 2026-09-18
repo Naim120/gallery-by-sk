@@ -4,6 +4,7 @@ import android.content.Context
 import android.media.MediaScannerConnection
 import android.os.Environment
 import android.util.Log
+import android.webkit.MimeTypeMap
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.sk.gallery.model.FileEntry
@@ -436,8 +437,18 @@ object PrivateVaultManager {
             val originalPath = vaultMap[file.name] ?: continue
             val originalName = File(originalPath).name
 
-            val isVideo = originalName.endsWith(".mp4", true) || originalName.endsWith(".mkv", true) || originalName.endsWith(".mov", true)
-            val mimeType = if (isVideo) "video/*" else "image/*"
+            val ext = originalName.substringAfterLast('.', "").lowercase()
+            val mappedMime = if (ext.isNotEmpty()) MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext) else null
+            val isVideo = mappedMime?.startsWith("video", true) == true ||
+                originalName.endsWith(".mp4", true) || originalName.endsWith(".mkv", true) ||
+                originalName.endsWith(".mov", true) || originalName.endsWith(".webm", true) ||
+                originalName.endsWith(".3gp", true) || originalName.endsWith(".avi", true) ||
+                originalName.endsWith(".flv", true) || originalName.endsWith(".ts", true)
+            val mimeType = when {
+                mappedMime != null -> mappedMime
+                isVideo -> "video/*"
+                else -> "image/*"
+            }
 
             val durationVal = vaultMetadata[file.name] ?: 0L
             val cloudFileId = if (cloudStatusSet.contains("${file.name}.enc")) "uploaded" else null

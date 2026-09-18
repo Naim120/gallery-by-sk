@@ -422,9 +422,18 @@ class AlbumDetailFragment : Fragment() {
                         "Favourites" -> repository.getFavorites()
                         "Screenshots" -> repository.getScreenshots()
                         "Videos" -> repository.getVideos()
-                        "WhatsApp Images" -> allMedia.filter { it.relativePath.contains("WhatsApp", ignoreCase = true) && !it.relativePath.contains("Documents", ignoreCase = true) && !it.mimeType.startsWith("video", ignoreCase = true) }
-                        "WhatsApp Documents" -> allMedia.filter { it.relativePath.contains("WhatsApp", ignoreCase = true) && it.relativePath.contains("Documents", ignoreCase = true) }
-                        "WhatsApp Videos" -> allMedia.filter { it.relativePath.contains("WhatsApp", ignoreCase = true) && it.mimeType.startsWith("video", ignoreCase = true) }
+                        "WhatsApp Images" -> allMedia.filter {
+                            val folder = com.sk.gallery.util.FileUtils.getAlbumRelativePath(it.relativePath)
+                            folder.contains("WhatsApp", ignoreCase = true) && !folder.contains("Documents", ignoreCase = true) && !it.mimeType.startsWith("video", ignoreCase = true)
+                        }
+                        "WhatsApp Documents" -> allMedia.filter {
+                            val folder = com.sk.gallery.util.FileUtils.getAlbumRelativePath(it.relativePath)
+                            folder.contains("WhatsApp", ignoreCase = true) && folder.contains("Documents", ignoreCase = true)
+                        }
+                        "WhatsApp Videos" -> allMedia.filter {
+                            val folder = com.sk.gallery.util.FileUtils.getAlbumRelativePath(it.relativePath)
+                            folder.contains("WhatsApp", ignoreCase = true) && it.mimeType.startsWith("video", ignoreCase = true)
+                        }
                         else -> allMedia.filter {
                             val albumPathForFile = com.sk.gallery.util.FileUtils.getAlbumRelativePath(it.relativePath)
                             albumPathForFile.equals(albumPath, ignoreCase = true)
@@ -458,9 +467,18 @@ class AlbumDetailFragment : Fragment() {
             "Favourites" -> repository.getFavorites()
             "Screenshots" -> repository.getScreenshots()
             "Videos" -> repository.getVideos()
-            "WhatsApp Images" -> allMedia.filter { it.relativePath.contains("WhatsApp", ignoreCase = true) && !it.relativePath.contains("Documents", ignoreCase = true) && !it.mimeType.startsWith("video", ignoreCase = true) }
-            "WhatsApp Documents" -> allMedia.filter { it.relativePath.contains("WhatsApp", ignoreCase = true) && it.relativePath.contains("Documents", ignoreCase = true) }
-            "WhatsApp Videos" -> allMedia.filter { it.relativePath.contains("WhatsApp", ignoreCase = true) && it.mimeType.startsWith("video", ignoreCase = true) }
+            "WhatsApp Images" -> allMedia.filter {
+                val folder = com.sk.gallery.util.FileUtils.getAlbumRelativePath(it.relativePath)
+                folder.contains("WhatsApp", ignoreCase = true) && !folder.contains("Documents", ignoreCase = true) && !it.mimeType.startsWith("video", ignoreCase = true)
+            }
+            "WhatsApp Documents" -> allMedia.filter {
+                val folder = com.sk.gallery.util.FileUtils.getAlbumRelativePath(it.relativePath)
+                folder.contains("WhatsApp", ignoreCase = true) && folder.contains("Documents", ignoreCase = true)
+            }
+            "WhatsApp Videos" -> allMedia.filter {
+                val folder = com.sk.gallery.util.FileUtils.getAlbumRelativePath(it.relativePath)
+                folder.contains("WhatsApp", ignoreCase = true) && it.mimeType.startsWith("video", ignoreCase = true)
+            }
             else -> allMedia.filter {
                 val albumPathForFile = com.sk.gallery.util.FileUtils.getAlbumRelativePath(it.relativePath)
                 albumPathForFile.equals(albumPath, ignoreCase = true)

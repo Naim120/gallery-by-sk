@@ -90,6 +90,13 @@ class MediaAdapter(
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        if (itemSize == 0) {
+            val context = parent.context
+            val displayMetrics = context.resources.displayMetrics
+            val horizontalPaddingPx = parent.paddingLeft + parent.paddingRight
+            val availableWidth = (if (parent.width > 0) parent.width else displayMetrics.widthPixels) - horizontalPaddingPx
+            itemSize = availableWidth / spanCount
+        }
         val inflater = LayoutInflater.from(parent.context)
         return if (viewType == TYPE_GHOST) {
             val binding = ItemGhostCardBinding.inflate(inflater, parent, false)
@@ -117,8 +124,8 @@ class MediaAdapter(
         super.onAttachedToRecyclerView(recyclerView)
         val context = recyclerView.context
         val displayMetrics = context.resources.displayMetrics
-        val horizontalPaddingPx = (32 * displayMetrics.density).toInt()
-        val availableWidth = displayMetrics.widthPixels - horizontalPaddingPx
+        val horizontalPaddingPx = recyclerView.paddingLeft + recyclerView.paddingRight
+        val availableWidth = (if (recyclerView.width > 0) recyclerView.width else displayMetrics.widthPixels) - horizontalPaddingPx
         itemSize = availableWidth / spanCount
     }
 

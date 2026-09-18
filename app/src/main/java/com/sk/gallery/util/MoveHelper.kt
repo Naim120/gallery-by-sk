@@ -59,28 +59,29 @@ object MoveHelper {
 
         albumList.add(AlbumModel("Camera", "DCIM/Camera", cameraList.firstOrNull(), cameraList.size, true))
         albumList.add(AlbumModel("Favourites", "", favList.firstOrNull(), favList.size, true))
-        albumList.add(AlbumModel("Screenshot", "Pictures/Screenshots", screenshotList.firstOrNull(), screenshotList.size, true))
+        albumList.add(AlbumModel("Screenshots", "Pictures/Screenshots", screenshotList.firstOrNull(), screenshotList.size, true))
 
         val folderGroups = allMedia.groupBy { entry ->
-            val path = entry.relativePath
+            val albumPath = FileUtils.getAlbumRelativePath(entry.relativePath)
             when {
-                path.contains("WhatsApp", ignoreCase = true) -> {
-                    if (path.contains("Documents", ignoreCase = true)) "WhatsApp Documents"
+                albumPath.contains("WhatsApp", ignoreCase = true) -> {
+                    if (albumPath.contains("Documents", ignoreCase = true)) "WhatsApp Documents"
                     else "WhatsApp Images"
                 }
-                path.contains("Telegram", ignoreCase = true) -> "Telegram"
-                path.contains("Instagram", ignoreCase = true) -> "Instagram"
-                path.contains("ChatGPT", ignoreCase = true) -> "ChatGPT"
-                path.contains("Pictures/", ignoreCase = true) -> {
-                    val sub = path.substringAfter("Pictures/").substringBefore("/")
+                albumPath.contains("Telegram", ignoreCase = true) -> "Telegram"
+                albumPath.contains("Instagram", ignoreCase = true) -> "Instagram"
+                albumPath.contains("ChatGPT", ignoreCase = true) -> "ChatGPT"
+                albumPath.contains("Screenshot", ignoreCase = true) -> "Screenshots"
+                albumPath.contains("Pictures/", ignoreCase = true) -> {
+                    val sub = albumPath.substringAfter("Pictures/").substringBefore("/")
                     if (sub.isNotBlank()) sub else "Pictures"
                 }
-                path.contains("DCIM/", ignoreCase = true) -> {
-                    val sub = path.substringAfter("DCIM/").substringBefore("/")
+                albumPath.contains("DCIM/", ignoreCase = true) -> {
+                    val sub = albumPath.substringAfter("DCIM/").substringBefore("/")
                     if (sub.isNotBlank()) sub else "DCIM"
                 }
                 else -> {
-                    val firstDir = path.substringBefore("/")
+                    val firstDir = albumPath.substringBefore("/")
                     if (firstDir.isNotBlank()) firstDir else "Other"
                 }
             }
