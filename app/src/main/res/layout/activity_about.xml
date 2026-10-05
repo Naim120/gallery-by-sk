@@ -46,10 +46,11 @@
                 android:textStyle="bold" />
 
             <TextView
+                android:id="@+id/tv_app_version"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:text="Version 1.4.3"
+                android:text="Version 1.5"
                 android:textColor="@color/text_muted"
                 android:textSize="16sp" />
 

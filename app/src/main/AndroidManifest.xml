@@ -151,6 +151,12 @@
             android:screenOrientation="portrait"
             android:exported="false" />
 
+        <activity
+            android:name=".ui.pdf.PdfConverterActivity"
+            android:theme="@style/Theme.GalleryBySK"
+            android:screenOrientation="portrait"
+            android:exported="false" />
+
     </application>
 
 </manifest>

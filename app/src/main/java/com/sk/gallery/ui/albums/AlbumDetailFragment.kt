@@ -25,11 +25,14 @@ import androidx.recyclerview.widget.GridLayoutManager
 import com.sk.gallery.MainActivity
 import com.sk.gallery.R
 import com.sk.gallery.data.MediaRepository
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.sk.gallery.data.local.AppPreferences
+import com.sk.gallery.databinding.DialogSelectionMoreBinding
 import com.sk.gallery.databinding.FragmentAlbumDetailBinding
 import com.sk.gallery.model.FileEntry
 import com.sk.gallery.ui.adapter.MediaAdapter
 import com.sk.gallery.ui.collage.CollageActivity
+import com.sk.gallery.ui.pdf.PdfConverterActivity
 import com.sk.gallery.ui.viewer.PhotoViewerActivity
 import com.sk.gallery.util.applySort
 import kotlinx.coroutines.launch
@@ -127,6 +130,7 @@ class AlbumDetailFragment : Fragment() {
         binding.rvAlbumDetailGrid.layoutManager = GridLayoutManager(requireContext(), columns)
         binding.rvAlbumDetailGrid.setHasFixedSize(true)
         binding.rvAlbumDetailGrid.setItemViewCacheSize(20)
+        (binding.rvAlbumDetailGrid.itemAnimator as? androidx.recyclerview.widget.SimpleItemAnimator)?.supportsChangeAnimations = false
         binding.rvAlbumDetailGrid.adapter = adapter
         
         com.sk.gallery.util.FastScrollHelper(
@@ -248,14 +252,6 @@ class AlbumDetailFragment : Fragment() {
             binding.ivActionFavourite.setColorFilter(favColor)
             binding.tvActionFavourite.text = if (allFav) "Favourited" else "Favourite"
             binding.tvActionFavourite.setTextColor(favColor)
-            
-            // Collage option logic (only 2-5 photos)
-            val selectedCount = adapter.selectedEntries.size
-            if (selectedCount in 2..5) {
-                binding.btnActionCollage.visibility = View.VISIBLE
-            } else {
-                binding.btnActionCollage.visibility = View.GONE
-            }
         } else {
             binding.selectionTopBar.visibility = View.GONE
             binding.selectionBottomBar.visibility = View.GONE
@@ -360,38 +356,10 @@ class AlbumDetailFragment : Fragment() {
             }
         }
 
-        binding.btnActionCollage.setOnClickListener {
+        binding.btnActionMore.setOnClickListener {
             val selected = adapter.selectedEntries.toList()
-            
-            // Filter to only valid local images
-            val validImages = selected.filter { 
-                it.mimeType.startsWith("image/")
-            }
-
-            if (validImages.size !in 2..5) {
-                Toast.makeText(requireContext(), "Please select 2 to 5 local images for collage", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            val uris = ArrayList<Uri>()
-            for (entry in validImages) {
-                val file = File(Environment.getExternalStorageDirectory(), entry.relativePath)
-                if (file.exists()) {
-                    val uri = FileProvider.getUriForFile(requireContext(), "${requireContext().packageName}.fileprovider", file)
-                    uris.add(uri)
-                }
-            }
-
-            if (uris.isNotEmpty()) {
-                val intent = Intent(requireContext(), CollageActivity::class.java).apply {
-                    putParcelableArrayListExtra("extra_uris", uris)
-                }
-                startActivity(intent)
-                adapter.clearSelectionMode()
-                updateSelectionUI()
-            } else {
-                Toast.makeText(requireContext(), "Failed to locate files on device.", Toast.LENGTH_SHORT).show()
-            }
+            if (selected.isEmpty()) return@setOnClickListener
+            showMoreOptionsDialog(selected)
         }
     }
 
@@ -493,6 +461,81 @@ class AlbumDetailFragment : Fragment() {
             binding.tvEmptyAlbum.visibility = View.GONE
             adapter.updateEntries(albumEntries)
         }
+    }
+
+    private fun showMoreOptionsDialog(selected: List<FileEntry>) {
+        val dialog = BottomSheetDialog(requireContext())
+        val dialogBinding = DialogSelectionMoreBinding.inflate(layoutInflater)
+        dialog.setContentView(dialogBinding.root)
+
+        val validImages = selected.filter { 
+            it.mimeType.startsWith("image/") && !it.isMissingLocally
+        }
+
+        // Configure PDF option
+        dialogBinding.tvPdfCount.text = if (validImages.isNotEmpty()) {
+            "${validImages.size} photo${if (validImages.size > 1) "s" else ""} selected"
+        } else {
+            "No photos selected"
+        }
+
+        dialogBinding.llOptionPdf.setOnClickListener {
+            dialog.dismiss()
+            if (validImages.isEmpty()) {
+                Toast.makeText(requireContext(), "Please select at least one image to convert to PDF", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            val imagePaths = ArrayList<String>()
+            for (entry in validImages) {
+                val file = File(Environment.getExternalStorageDirectory(), entry.relativePath)
+                val path = if (file.exists()) file.absolutePath else entry.relativePath
+                imagePaths.add(path)
+            }
+
+            val firstEntry = validImages.first()
+            val defaultName = File(firstEntry.fileName).nameWithoutExtension
+
+            val intent = Intent(requireContext(), PdfConverterActivity::class.java).apply {
+                putStringArrayListExtra(PdfConverterActivity.EXTRA_IMAGE_PATHS, imagePaths)
+                putExtra(PdfConverterActivity.EXTRA_DEFAULT_NAME, defaultName)
+            }
+            startActivity(intent)
+            adapter.clearSelectionMode()
+            updateSelectionUI()
+        }
+
+        // Configure Collage option (only 2 to 5 photos)
+        if (validImages.size in 2..5) {
+            dialogBinding.llOptionCollage.visibility = View.VISIBLE
+            dialogBinding.tvCollageCount.text = "${validImages.size} photos selected"
+            dialogBinding.llOptionCollage.setOnClickListener {
+                dialog.dismiss()
+                val uris = ArrayList<Uri>()
+                for (entry in validImages) {
+                    val file = File(Environment.getExternalStorageDirectory(), entry.relativePath)
+                    if (file.exists()) {
+                        val uri = FileProvider.getUriForFile(requireContext(), "${requireContext().packageName}.fileprovider", file)
+                        uris.add(uri)
+                    }
+                }
+
+                if (uris.isNotEmpty()) {
+                    val intent = Intent(requireContext(), CollageActivity::class.java).apply {
+                        putParcelableArrayListExtra("extra_uris", uris)
+                    }
+                    startActivity(intent)
+                    adapter.clearSelectionMode()
+                    updateSelectionUI()
+                } else {
+                    Toast.makeText(requireContext(), "Failed to locate files on device.", Toast.LENGTH_SHORT).show()
+                }
+            }
+        } else {
+            dialogBinding.llOptionCollage.visibility = View.GONE
+        }
+
+        dialog.show()
     }
 
     override fun onDestroyView() {

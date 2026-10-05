@@ -25,6 +25,7 @@ When switching to a new phone, most cloud backups (like Google Photos) lump all 
 - **Flawless Cloud Backup (Google Drive)**: Export and Import your photos while maintaining original folders and timestamps.
 - **Built-in Editor**: Crop, rotate, add text, draw, apply filters, and adjust brightness/contrast directly in the app.
 - **Collage Maker**: Create beautiful photo collages directly from your gallery.
+- **Photo to PDF Converter**: Convert one or multiple images into high-quality A4 PDF documents. Reorder pages via drag-and-drop, rotate pages by 90°, remove unwanted pages, and inspect fine details using the full-screen interactive preview (with pinch-to-zoom and pan) before exporting directly to your Documents folder.
 - **Private Safe**: A secure, isolated vault for your sensitive media.
   - Requires PIN or Biometric authentication.
   - Prevents screenshots and immediately locks when you leave the app.
@@ -91,7 +92,6 @@ It permanently removes the backup for the selected device from Google Drive and 
 
 ## Roadmap (Coming Soon)
 - Support for more cloud services (AWS S3, Wasabi, Cloudflare R2).
-- Photo to PDF converter.
 - Advanced editing tools (Blur, Sharpness).
 - Custom themes and background colors.
 

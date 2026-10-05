@@ -22,6 +22,8 @@ class AboutActivity : AppCompatActivity() {
             onBackPressedDispatcher.onBackPressed()
         }
 
+        findViewById<android.widget.TextView>(R.id.tv_app_version)?.text = "Version ${com.sk.gallery.BuildConfig.VERSION_NAME}"
+
         val etWallet = findViewById<TextInputEditText>(R.id.et_wallet_address)
         val btnCopy = findViewById<MaterialButton>(R.id.btn_copy_wallet)
         

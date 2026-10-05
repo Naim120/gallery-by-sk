@@ -83,14 +83,27 @@ class TimelineAdapter(
         isSelectionMode = true
         selectedEntries.clear()
         selectedEntries.add(initialEntry)
-        notifyDataSetChanged()
+        val index = items.indexOfFirst { it is TimelineItem.Media && it.entry.hashId == initialEntry.hashId }
+        if (index != -1) {
+            notifyItemChanged(index)
+        } else {
+            notifyDataSetChanged()
+        }
         onSelectionChanged(selectedEntries)
     }
 
     fun clearSelectionMode() {
         isSelectionMode = false
+        val toUpdate = selectedEntries.toList()
         selectedEntries.clear()
-        notifyDataSetChanged()
+        if (toUpdate.isNotEmpty() && toUpdate.size <= 30) {
+            for (entry in toUpdate) {
+                val index = items.indexOfFirst { it is TimelineItem.Media && it.entry.hashId == entry.hashId }
+                if (index != -1) notifyItemChanged(index)
+            }
+        } else {
+            notifyDataSetChanged()
+        }
         onSelectionChanged(selectedEntries)
     }
 
@@ -206,6 +219,17 @@ class TimelineAdapter(
         itemSize = availableWidth / spanCount
     }
 
+    override fun onViewRecycled(holder: RecyclerView.ViewHolder) {
+        super.onViewRecycled(holder)
+        if (holder is MediaViewHolder) {
+            holder.binding.ivThumbnail.animate().cancel()
+            holder.binding.ivThumbnail.scaleX = 1.0f
+            holder.binding.ivThumbnail.scaleY = 1.0f
+            holder.binding.root.setBackgroundColor(android.graphics.Color.TRANSPARENT)
+            holder.binding.ivCheck.visibility = View.GONE
+        }
+    }
+
     inner class HeaderViewHolder(private val binding: ItemDateHeaderBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
@@ -215,7 +239,7 @@ class TimelineAdapter(
         }
     }
 
-    inner class MediaViewHolder(private val binding: ItemMediaBinding) :
+    inner class MediaViewHolder(val binding: ItemMediaBinding) :
         RecyclerView.ViewHolder(binding.root) {
         
         init {
@@ -243,12 +267,19 @@ class TimelineAdapter(
 
             val isSelected = selectedEntries.contains(entry)
             
+            binding.ivThumbnail.animate().cancel()
             if (isSelected) {
                 binding.root.setBackgroundColor(androidx.core.content.ContextCompat.getColor(context, R.color.text_primary))
-                binding.ivThumbnail.animate().scaleX(0.9f).scaleY(0.9f).setDuration(200).start()
+                if (binding.ivThumbnail.scaleX != 0.9f) {
+                    binding.ivThumbnail.animate().scaleX(0.9f).scaleY(0.9f).setDuration(150).start()
+                } else {
+                    binding.ivThumbnail.scaleX = 0.9f
+                    binding.ivThumbnail.scaleY = 0.9f
+                }
             } else {
                 binding.root.setBackgroundColor(android.graphics.Color.TRANSPARENT)
-                binding.ivThumbnail.animate().scaleX(1.0f).scaleY(1.0f).setDuration(200).start()
+                binding.ivThumbnail.scaleX = 1.0f
+                binding.ivThumbnail.scaleY = 1.0f
             }
             
             binding.vOverlay.visibility = View.GONE
